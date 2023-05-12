@@ -1,0 +1,15 @@
+default:
+    env_name: default
+
+development:
+    env_name: development
+
+testing:
+    env_name: testing
+
+production:
+    env_name: production
+
+global:
+    global_env_name: global
+
