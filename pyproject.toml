@@ -17,6 +17,7 @@ black = "^23.3.0"
 flake8 = "^6.0.0"
 mypy = "^1.2.0"
 pylint = "^2.17.2"
+setuptools = "^67.7.2"
 
 [tool.poetry.group.test.dependencies]
 coverage = "^7.2.3"
@@ -27,6 +28,10 @@ Sphinx = "^6.1.3"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+filterwarnings = [
+    'ignore:.*pkg_resources.declare_namespace.*:DeprecationWarning',
+    'ignore:.*pkg_resources is deprecated as an API.*:DeprecationWarning',
+]
 
 [tool.coverage.run]
 branch = true
