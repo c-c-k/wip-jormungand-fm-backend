@@ -8,24 +8,17 @@ default:
       precise:
         format: '%(asctime)s %(levelname)-8s: %(name)s[%(lineno)s]: %(message)s'
         datefmt: '%Y-%m-%d %H:%M:%S'
-    handlers:
-      console:
-        class : logging.StreamHandler
-        formatter: brief
-        level: WARNING
-        stream  : ext://sys.stdout
-    root:
-      level: DEBUG
-      handlers: [console]
 
 development:
-  dynaconf_merge: true
   logging:
+    dynaconf_merge: true
     handlers:
-      console:
+      development_console_handler:
+        class : logging.StreamHandler
         formatter: brief
         level: INFO
-      file:
+        stream  : ext://sys.stdout
+      development_rotating_file_handler:
         class : logging.handlers.RotatingFileHandler
         formatter: precise
         level   : DEBUG
@@ -33,15 +26,24 @@ development:
         maxBytes: 8192
         backupCount: 3
     root:
-      handlers: [file]
+      level: DEBUG
+      handlers: 
+        - development_console_handler
+        - development_rotating_file_handler
 
 testing:
   logging:
     dynaconf_merge: true
     handlers:
-      console:
-        level: WARNING
+      testing_console_handler:
+        class : logging.StreamHandler
         formatter: precise
+        level: WARNING
+        stream  : ext://sys.stdout
+    root:
+      level: WARNING
+      handlers: 
+        - testing_console_handler
 
 production:
 
