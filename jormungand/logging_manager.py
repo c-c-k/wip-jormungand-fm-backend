@@ -1,28 +1,8 @@
 import logging
-from logging.handlers import RotatingFileHandler
+import logging.config
+
+from config import settings
 from .utils import Singleton
-
-
-def _standard_formater():
-    formatter = logging.Formatter(
-            '%(asctime)s %(levelname)-8s: %(name)s[%(lineno)s]: %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S')
-    return formatter
-
-
-def _console_handler():
-    handler_ = logging.StreamHandler()
-    handler_.setLevel(logging.DEBUG)
-    handler_.setFormatter(_standard_formater())
-    return handler_
-
-
-def _rotating_file_handler():
-    handler_ = RotatingFileHandler(
-            filename='debug.log', mode='a', maxBytes=1000000, backupCount=3)
-    handler_.setLevel(logging.DEBUG)
-    handler_.setFormatter(_standard_formater())
-    return handler_
 
 
 class LoggingManager(metaclass=Singleton):
@@ -45,18 +25,15 @@ class LoggingManager(metaclass=Singleton):
     #     is initialized with ``get_logger(__name__)`` should make the log
     #     messages more useful for debugging.
 
-    _default_logger_name = 'jormungand_global_logger'
+    _default_logger_name = 'jormungand.default_logger'
 
     def __init__(self):
-        self.setup_logger()
+        self.setup_root_logger()
 
-    def setup_logger(self):
-        """Set up the root logger
+    def setup_root_logger(self, testing=False):
+        """Load/reload settings for the root logger.
         """
-        logger_ = logging.getLogger()
-        logger_.setLevel(logging.DEBUG)
-        logger_.addHandler(_console_handler())
-        logger_.addHandler(_rotating_file_handler())
+        logging.config.dictConfig(settings.logging)
 
     def get_logger(self, name=None) -> logging.Logger:
         """Get a logger object
