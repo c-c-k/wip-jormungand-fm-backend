@@ -1,0 +1,51 @@
+default:
+  logging:
+    version: 1
+    formatters:
+      brief:
+        format: '%(asctime)s %(levelname)-8s: %(message)s'
+        datefmt: '%y-%m-%d %H:%M:%S'
+      precise:
+        format: '%(asctime)s %(levelname)-8s: %(name)s[%(lineno)s]: %(message)s'
+        datefmt: '%Y-%m-%d %H:%M:%S'
+
+development:
+  logging:
+    dynaconf_merge: true
+    handlers:
+      development_console_handler:
+        class : logging.StreamHandler
+        formatter: brief
+        level: INFO
+        stream  : ext://sys.stdout
+      development_rotating_file_handler:
+        class : logging.handlers.RotatingFileHandler
+        formatter: precise
+        level   : DEBUG
+        filename: debug.log
+        maxBytes: 8192
+        backupCount: 3
+    root:
+      level: DEBUG
+      handlers: 
+        - development_console_handler
+        - development_rotating_file_handler
+
+testing:
+  logging:
+    dynaconf_merge: true
+    handlers:
+      testing_console_handler:
+        class : logging.StreamHandler
+        formatter: precise
+        level: WARNING
+        stream  : ext://sys.stdout
+    root:
+      level: WARNING
+      handlers: 
+        - testing_console_handler
+
+production:
+
+global:
+
