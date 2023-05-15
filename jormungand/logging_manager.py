@@ -25,12 +25,10 @@ class LoggingManager(metaclass=Singleton):
     #     is initialized with ``get_logger(__name__)`` should make the log
     #     messages more useful for debugging.
 
-    _default_logger_name = 'jormungand.default_logger'
-
     def __init__(self):
         self.setup_root_logger()
 
-    def setup_root_logger(self, testing=False):
+    def setup_root_logger(self):
         """Load/reload settings for the root logger.
         """
         logging.config.dictConfig(settings.logging)
@@ -38,17 +36,39 @@ class LoggingManager(metaclass=Singleton):
     def get_logger(self, name=None) -> logging.Logger:
         """Get a logger object
 
-        Should usually be called as:
-        ``logger = LoggingManager.get_logger(__name__)``
-        If called without a name argument will return a default Logger
-        instance.
+        .. note::
+
+            For convenience and in case of future refactoring, it is better
+            not to use this method directly but use
+            ``logging_manager.get_logger`` instead.
+
         :param name: The name of the Logger instance to create or get.
         :return: A Logger instance corresponding to the name argument.
+
         """
         if name is None:
-            logger_ = logging.getLogger(self._default_logger_name)
+            logger_ = logging.getLogger(
+                    settings.get('default_logger_name', 'root'))
         else:
             logger_ = logging.getLogger(name)
         return logger_
 
+
+def get_logger(name=None):
+    """Get a logger object
+
+    Should usually be called as:
+    ``logger = logging_manager.get_logger(__name__)``
+
+    If called with a name, gets/creates and returns a logger for
+    that name.
+
+    If called without a name argument will return a default Logger
+    instance defined via ``JORMUNGAND_DEFAULT_LOGGER_NAME`` env var
+    or ``default_logger_name`` configuration file setting,
+    if the setting is missing, the fallback is to return the root logger.
+    :param name: The name of the Logger instance to create or get.
+    :return: A Logger instance corresponding to the name argument.
+    """
+    return LoggingManager().get_logger(name)
 
