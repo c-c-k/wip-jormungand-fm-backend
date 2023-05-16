@@ -39,7 +39,7 @@ CREATE OR REPLACE PROCEDURE get_flights_by_airline_id(_airline_id bigint)
     --Returns a list of all flights belonging to airline company of the input id.
 LANGUAGE SQL
 AS $$
-SELECT * FROM flights WHERE airline_id = _airline_id
+SELECT * FROM flights WHERE airline_company_id = _airline_id
 $$;
 
 CREATE OR REPLACE PROCEDURE get_arrival_flights(_country_id int)
