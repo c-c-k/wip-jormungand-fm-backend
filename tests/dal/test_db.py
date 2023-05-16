@@ -1,4 +1,4 @@
-from sqlalchemy import Engine
+from sqlalchemy import Engine, text
 
 from jormungand.dal import db
 
@@ -9,9 +9,9 @@ def test_get_engine():
     Test that as per sqlalchemy recommendations only one engine is used
     Test that the engine uses a test database
     """
-    engine = db.get_engine()
+    engine = db.get_db_engine()
     assert isinstance(engine, Engine)
-    assert engine is db.get_engine()
+    assert engine is db.get_db_engine()
     assert 'test' in str(engine.url)
 
 
@@ -23,5 +23,6 @@ def test_engine_uses_psycopg2():
     and might thus contain some functionality that is specifically
     dependent on psycopg2.
     """
-    engine = db.get_engine()
+    engine = db.get_db_engine()
     assert engine.driver == 'psycopg2'
+
