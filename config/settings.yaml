@@ -4,6 +4,7 @@ default:
 
 development:
     env_name: development
+    db_echo: true
 
 testing:
     env_name: testing

@@ -11,6 +11,8 @@ packages = [{include = "jormungand"}]
 [tool.poetry.dependencies]
 python = "^3.10"
 dynaconf = {extras = ["yaml"], version = "^3.1.12"}
+sqlalchemy = "^2.0.13"
+psycopg2-binary = "^2.9.6"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"
