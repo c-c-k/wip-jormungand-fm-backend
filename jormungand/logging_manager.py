@@ -1,7 +1,7 @@
 import logging
 import logging.config
 
-from config import settings
+from .utils.config import settings
 from .utils import Singleton
 
 

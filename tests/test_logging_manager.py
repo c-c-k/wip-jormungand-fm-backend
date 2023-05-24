@@ -1,6 +1,6 @@
 import logging
 
-from config import settings
+from jormungand.utils.config import settings
 from jormungand import logging_manager
 
 

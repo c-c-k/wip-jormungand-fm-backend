@@ -1,5 +1,6 @@
 from pprint import pp
-from config import settings
+
+from jormungand.utils.config import settings
 
 
 def main():

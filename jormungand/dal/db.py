@@ -6,7 +6,7 @@ from pathlib import Path
 from sqlalchemy import create_engine, text, Engine
 from sqlalchemy.engine import URL
 
-from config import settings
+from jormungand.utils.config import settings
 from jormungand.logging_manager import LoggingManager
 
 logger = LoggingManager.get_logger(__name__)
