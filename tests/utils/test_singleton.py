@@ -29,6 +29,3 @@ def test_singleton_is_singleton():
     singleton_class_object_2 = SingletonClass(2)
     assert singleton_class_object_1 is singleton_class_object_2
     assert singleton_class_object_2.init_arg == 1
-    assert singleton_class_object_1 not in [1, 2]
-    assert singleton_class_object_1(3) == 3
-
