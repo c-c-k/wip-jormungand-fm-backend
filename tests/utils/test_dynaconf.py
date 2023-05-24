@@ -1,6 +1,6 @@
-from jormungand import settings
+from jormungand import config
 
 
 def test_dynaconf_is_in_testing_env():
-    assert settings.env_name == 'testing'
+    assert config.env_name == 'testing'
 

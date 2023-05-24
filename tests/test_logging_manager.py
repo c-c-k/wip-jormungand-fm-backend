@@ -1,6 +1,6 @@
 import logging
 
-from jormungand.utils.config import settings
+from jormungand.utils.config import config
 from jormungand import logging_manager
 
 
@@ -19,7 +19,7 @@ def test_get_logger_returns_correct_logger():
     """
     logger = logging_manager.get_logger(__name__)
     assert logger.name == __name__
-    settings['default_logger_name'] = 'test_logger'
+    config['default_logger_name'] = 'test_logger'
     logger = logging_manager.get_logger()
     assert logger.name == 'test_logger'
 

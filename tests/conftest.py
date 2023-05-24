@@ -3,7 +3,7 @@ import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL
 
-from jormungand.utils.config import settings
+from jormungand.utils.config import config
 from jormungand.logging_manager import LoggingManager
 from jormungand.dal.db import get_db_engine, init_db
 
@@ -26,7 +26,7 @@ _cleanup_db_engine = None
 def _init_cleanup_db_engine():
     global _cleanup_db_engine
     _cleanup_db_engine = create_engine(
-            URL.create(**settings['cleanup_database']),
+            URL.create(**config['cleanup_database']),
             isolation_level='AUTOCOMMIT')
 # .. note::
 #       the following doesn't work because postgresql doesn't 
@@ -53,7 +53,7 @@ def _cleanup_test_db(test_db_name):
 
 @pytest.fixture(scope="session", autouse=True)
 def set_test_settings():
-    settings.configure(FORCE_ENV_FOR_DYNACONF="testing")
+    config.configure(FORCE_ENV_FOR_DYNACONF="testing")
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -64,7 +64,7 @@ def set_test_logging(set_test_settings):
 
 @pytest.fixture
 def db(set_test_settings):
-    _cleanup_test_db(settings['database.database'])
+    _cleanup_test_db(config['database.database'])
     init_db()
     yield get_db_engine()
 

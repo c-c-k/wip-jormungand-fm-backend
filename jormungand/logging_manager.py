@@ -1,7 +1,7 @@
 import logging
 import logging.config
 
-from .utils.config import settings
+from .utils.config import config
 from .utils import Singleton
 
 
@@ -31,7 +31,7 @@ class LoggingManager(metaclass=Singleton):
     def setup_root_logger(self):
         """Load/reload settings for the root logger.
         """
-        logging.config.dictConfig(settings.logging)
+        logging.config.dictConfig(config.logging)
 
     def get_logger(self, name=None) -> logging.Logger:
         """Get a logger object
@@ -48,7 +48,7 @@ class LoggingManager(metaclass=Singleton):
         """
         if name is None:
             logger_ = logging.getLogger(
-                    settings.get('default_logger_name', 'root'))
+                    config.get('default_logger_name', 'root'))
         else:
             logger_ = logging.getLogger(name)
         return logger_

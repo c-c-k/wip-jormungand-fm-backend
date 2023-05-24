@@ -1,9 +1,9 @@
 from pprint import pp
 
-from jormungand.utils.config import settings
+from jormungand.utils.config import config
 
 
 def main():
-    # pp(settings.as_dict(internal=True))
+    # pp(config.as_dict(internal=True))
     pass
 

@@ -1,11 +1,11 @@
-"""Project Dynaconf based settings loading module
+"""Project Dynaconf based configuration loading module
 
 For details, see https://www.dynaconf.com/configuration
 """
 
 from dynaconf import Dynaconf
 
-settings = Dynaconf(
+config = Dynaconf(
     core_loaders=['YAML'],
     settings_files=['settings.yaml', 'logging_settings.yaml', '.secrets.yaml'],
     environments=True,

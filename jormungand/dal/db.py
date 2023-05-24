@@ -6,7 +6,7 @@ from pathlib import Path
 from sqlalchemy import create_engine, text, Engine
 from sqlalchemy.engine import URL
 
-from jormungand.utils.config import settings
+from jormungand.utils.config import config
 from jormungand.logging_manager import LoggingManager
 
 logger = LoggingManager.get_logger(__name__)
@@ -19,8 +19,8 @@ _engine: Engine | None = None
 def _init_engine():
     global _engine
     _engine = create_engine(
-            URL.create(**settings['database']),
-            echo=settings.get('db_echo', False))
+            URL.create(**config['database']),
+            echo=config.get('db_echo', False))
 
 
 def get_db_engine() -> Engine:
