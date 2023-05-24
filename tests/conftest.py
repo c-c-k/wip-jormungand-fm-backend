@@ -4,7 +4,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL
 
 from jormungand.utils.config import config
-from jormungand.logging_manager import LoggingManager
+from jormungand.utils.logging import LoggingManager
 from jormungand.dal.db import get_db_engine, init_db
 
 _cleanup_db_engine = None

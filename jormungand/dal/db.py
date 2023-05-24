@@ -7,7 +7,7 @@ from sqlalchemy import create_engine, text, Engine
 from sqlalchemy.engine import URL
 
 from jormungand.utils.config import config
-from jormungand.logging_manager import LoggingManager
+from jormungand.utils.logging import LoggingManager
 
 logger = LoggingManager.get_logger(__name__)
 
