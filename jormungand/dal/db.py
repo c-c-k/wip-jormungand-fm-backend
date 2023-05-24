@@ -7,9 +7,9 @@ from sqlalchemy import create_engine, text, Engine
 from sqlalchemy.engine import URL
 
 from jormungand.utils.config import config
-from jormungand.utils.logging import LoggingManager
+from jormungand.utils.logging import get_logger
 
-logger = LoggingManager.get_logger(__name__)
+logger = get_logger(__name__)
 
 _CURRENT_DIR = Path(__file__).parent
 

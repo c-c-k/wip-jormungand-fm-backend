@@ -4,7 +4,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL
 
 from jormungand.utils.config import config
-from jormungand.utils.logging import LoggingManager
+from jormungand.utils.logging import load_logging_configuration
 from jormungand.dal.db import get_db_engine, init_db
 
 _cleanup_db_engine = None
@@ -59,7 +59,7 @@ def set_test_settings():
 @pytest.fixture(scope="session", autouse=True)
 def set_test_logging(set_test_settings):
     """Set global logging configuration for tests"""
-    LoggingManager().setup_root_logger()
+    load_logging_configuration()
 
 
 @pytest.fixture
