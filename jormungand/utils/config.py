@@ -1,15 +1,12 @@
-"""Project Dynaconf based settings loading module
+"""Project Dynaconf based configuration loading module
 
 For details, see https://www.dynaconf.com/configuration
 """
 
-import os
-
 from dynaconf import Dynaconf
 
-settings = Dynaconf(
+config = Dynaconf(
     core_loaders=['YAML'],
-    root_path=os.path.dirname(os.path.realpath(__file__)),
     settings_files=['settings.yaml', 'logging_settings.yaml', '.secrets.yaml'],
     environments=True,
     envvar_prefix="JORMUNGAND",
