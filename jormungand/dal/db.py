@@ -6,8 +6,8 @@ from pathlib import Path
 from sqlalchemy import create_engine, text, Engine
 from sqlalchemy.engine import URL
 
-from jormungand.utils.config import config
-from jormungand.utils.logging import get_logger
+from jormungand.core.config import config
+from jormungand.core.logging import get_logger
 
 logger = get_logger(__name__)
 

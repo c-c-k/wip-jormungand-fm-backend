@@ -1,7 +1,7 @@
 import logging
 
-from jormungand.utils.config import config
-from jormungand.utils.logging import get_logger
+from jormungand.core.config import config
+from jormungand.core.logging import get_logger
 
 
 def test_logging_set_up_for_testing():

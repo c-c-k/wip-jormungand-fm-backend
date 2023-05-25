@@ -3,8 +3,8 @@ import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL
 
-from jormungand.utils.config import config
-from jormungand.utils.logging import load_logging_configuration
+from jormungand.core.config import config
+from jormungand.core.logging import load_logging_configuration
 from jormungand.dal.db import get_db_engine, init_db
 
 _cleanup_db_engine = None
