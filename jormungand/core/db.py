@@ -6,8 +6,8 @@ from pathlib import Path
 from sqlalchemy import create_engine, text, Engine
 from sqlalchemy.engine import URL
 
-from jormungand.core.config import config
-from jormungand.core.logging import get_logger
+from .config import config
+from .logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -30,10 +30,10 @@ def get_db_engine() -> Engine:
 
 def init_db():
     with get_db_engine().connect() as conn:
-        with _CURRENT_DIR.joinpath('schema.sql').open() as f:
+        with _CURRENT_DIR.joinpath('./sql/schema.sql').open() as f:
             query = text(f.read())
             conn.execute(query)
-        with _CURRENT_DIR.joinpath('stored_procedures.sql').open() as f:
+        with _CURRENT_DIR.joinpath('./sql/stored_procedures.sql').open() as f:
             query = text(f.read())
             conn.execute(query)
         conn.commit()
