@@ -1,5 +1,10 @@
 default:
   logging:
+    sqlalchemy:
+      engine: DEBUG
+      pool: DEBUG
+      dialects: DEBUG
+      orm: DEBUG
     version: 1
     formatters:
       brief:

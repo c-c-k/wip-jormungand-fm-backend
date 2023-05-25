@@ -16,11 +16,27 @@ _CURRENT_DIR = Path(__file__).parent
 _engine: Engine | None = None
 
 
+def config_sqlalchemy_logging():
+    """Configures sqlalchemy logging
+
+    Mostly this just sets the log-level for the sqlalchemy loggers.
+    for details see:
+    https://docs.sqlalchemy.org/en/20/core/engines.html#dbengine-logging
+    :returns: None
+    """
+    for logger_name in ('engine', 'pool', 'dialects', 'orm'):
+        get_logger(f'sqlalchemy.{logger_name}').setLevel(
+                    config.logging[f'sqlalchemy.{logger_name}'])
+
+
 def _init_engine():
+    """TODO: Docstring for _init_engine.
+
+    :returns: TODO
+    """
     global _engine
-    _engine = create_engine(
-            URL.create(**config['database']),
-            echo=config.get('db_echo', False))
+    config_sqlalchemy_logging()
+    _engine = create_engine(URL.create(**config.database))
 
 
 def get_db_engine() -> Engine:
