@@ -1,5 +1,7 @@
 """db connection and access functions
 
+TODO: better documentation for db module
+TODO: error handling
 """
 from pathlib import Path
 
@@ -40,17 +42,46 @@ def _init_engine():
 
 
 def get_db_engine() -> Engine:
+    """TODO: Docstring for get_db_engine.
+
+    :returns: TODO
+    """
     if _engine is None:
         _init_engine()
     return _engine
 
+
+def get_db_connection(begin_once: bool = True):
+    """Get an sqlalchemy database connection
+
+    transaction context:
+        - begin once: implicitly commit at end of context
+        - normal: commit only on explicit calls to commit()
+    :begin_mode: True (default) for begin once transaction context,
+                 False for normal transaction context.
+    :returns: A database connection that should usually be used
+              for a transaction context
+              (i.e. ``with get_db_engine as conn:...``)
+    """
+    if begin_once:
+        connection = get_db_connection().begin()
+    else:
+        connection = get_db_connection().connect()
+    return connection
+
+
 def init_db():
-    with get_db_engine().connect() as conn:
-        with _CURRENT_DIR.joinpath('./sql/schema.sql').open() as f:
-            query = text(f.read())
-            conn.execute(query)
-        with _CURRENT_DIR.joinpath('./sql/stored_procedures.sql').open() as f:
-            query = text(f.read())
-            conn.execute(query)
-        conn.commit()
+    """TODO: Docstring for init_db.
+
+    :returns: TODO
+    """
+
+    # TODO: existing db handling
+    with _CURRENT_DIR.joinpath('./sql/schema.sql').open() as f:
+        schema = text(f.read())
+    with _CURRENT_DIR.joinpath('./sql/stored_procedures.sql').open() as f:
+        stored_procedures = text(f.read())
+    with get_db_connection() as conn:
+        conn.execute(schema)
+        conn.execute(stored_procedures)
     
