@@ -13,12 +13,15 @@ from .config import config
 _logging_configuration_loaded: bool = False
 
 
-def load_logging_configuration():
+def load_logging_configuration(logging_config: dict | None = None):
     """Load/reload configuration for the root logger.
     """
     global _logging_configuration_loaded
 
-    logging.config.dictConfig(config.logging)
+    if logging_config is None:
+        logging.config.dictConfig(config.logging)
+    else:
+        logging.config.dictConfig(logging_config)
     _logging_configuration_loaded = True
 
 

@@ -5,7 +5,8 @@ from sqlalchemy.engine import URL
 
 from jormungand.core.config import config
 from jormungand.core.logging import load_logging_configuration
-from jormungand.dal.db import get_db_engine, init_db
+from jormungand.core import db
+from jormungand.dal.ddl import init_db
 
 _cleanup_db_engine = None
 
@@ -63,9 +64,9 @@ def set_test_logging(set_test_settings):
 
 
 @pytest.fixture
-def db(set_test_settings):
+def db_conn(set_test_settings):
     _cleanup_test_db(config['database.database'])
     init_db()
-    yield get_db_engine()
+    yield db.get_connection()
 
 

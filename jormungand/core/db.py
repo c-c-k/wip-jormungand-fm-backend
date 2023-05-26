@@ -10,7 +10,7 @@ from sqlalchemy import create_engine, text, Engine
 from sqlalchemy.engine import URL
 
 from .config import config
-from .logging import get_logger
+from .logging import get_logger, load_logging_configuration
 
 logger = get_logger(__name__)
 
@@ -27,9 +27,10 @@ def config_sqlalchemy_logging():
     https://docs.sqlalchemy.org/en/20/core/engines.html#dbengine-logging
     :returns: None
     """
-    for logger_name in ('engine', 'pool', 'dialects', 'orm'):
-        get_logger(f'sqlalchemy.{logger_name}').setLevel(
-                    config.logging[f'sqlalchemy.{logger_name}'])
+    load_logging_configuration(config.logging.sqlalchemy)
+    # for logger_name in ('engine', 'pool', 'dialects', 'orm'):
+    #     get_logger(f'sqlalchemy.{logger_name}').setLevel(
+    #                 config.logging)
 
 
 def _init_engine():
@@ -42,8 +43,8 @@ def _init_engine():
     _engine = create_engine(URL.create(**config.database))
 
 
-def get_db_engine() -> Engine:
-    """TODO: Docstring for get_db_engine.
+def get_engine() -> Engine:
+    """TODO: Docstring for get_engine.
 
     :returns: TODO
     """
@@ -53,7 +54,7 @@ def get_db_engine() -> Engine:
 
 
 @contextlib.contextmanager
-def get_db_connection(begin_once: bool = True):
+def get_connection(begin_once: bool = True):
     """Get an sqlalchemy database connection
 
     transaction context:
@@ -63,12 +64,12 @@ def get_db_connection(begin_once: bool = True):
                  False for normal transaction context.
     :returns: A database connection that should usually be used
               for a transaction context
-              (i.e. ``with get_db_engine as conn:...``)
+              (i.e. ``with get_engine as conn:...``)
     """
     if begin_once:
-        connection = get_db_connection().begin
+        connection = get_connection().begin
     else:
-        connection = get_db_connection().connect
+        connection = get_connection().connect
     try:
         with connection as conn:
             yield conn
@@ -76,20 +77,3 @@ def get_db_connection(begin_once: bool = True):
         raise
     finally:
         pass
-
-
-def init_db():
-    """TODO: Docstring for init_db.
-
-    :returns: TODO
-    """
-
-    # TODO: existing db handling
-    with _CURRENT_DIR.joinpath('./sql/schema.sql').open() as f:
-        schema = text(f.read())
-    with _CURRENT_DIR.joinpath('./sql/stored_procedures.sql').open() as f:
-        stored_procedures = text(f.read())
-    with get_db_connection() as conn:
-        conn.execute(schema)
-        conn.execute(stored_procedures)
-    
