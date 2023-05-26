@@ -28,21 +28,12 @@ def config_sqlalchemy_logging():
     https://docs.sqlalchemy.org/en/20/core/engines.html#dbengine-logging
     :returns: None
     """
+    # TODO: REMOVE: this seems to be redundant
     # load_logging_configuration()
     # load_logging_configuration(config.logging.sqlalchemy)
     # for logger_name in ('engine', 'pool', 'dialects', 'orm'):
     #     get_logger(f'sqlalchemy.{logger_name}').setLevel(
     #                 config.logging)
-    # logger_ = get_logger('sqlalchemy')
-    # logger_.critical(str(logger_.handlers))
-    # logger_.addHandler(NullHandler)
-    # logger_.handlers = []
-    # logger_.critical(str(logger_.handlers))
-    # logger_.setLevel('DEBUG')
-    # for logger_name in ('engine', 'pool', 'dialects', 'orm'):
-    #     logger_ = get_logger(f'sqlalchemy.{logger_name}')
-    #     logger_.handlers = []
-    #     logger_.setLevel('DEBUG')
     pass
 
 
@@ -52,8 +43,9 @@ def _init_engine():
     :returns: TODO
     """
     global _engine
-    config_sqlalchemy_logging()
-    _engine = create_engine(URL.create(**config.database), echo=False, echo_pool=False)
+    # config_sqlalchemy_logging()# TODO: REMOVE: this seems to be redundant
+    _engine = create_engine(
+            URL.create(**config.database), echo=False, echo_pool=False)
 
 
 def get_engine() -> Engine:
