@@ -1,31 +1,58 @@
 default:
   logging:
     version: 1
-    sqlalchemy:
-      version: 1
-      incremental: true
-      loggers:
-        sqlalchemy.engine: {level: DEBUG}
-        sqlalchemy.pool: {level: DEBUG}
-        sqlalchemy.dialects: {level: DEBUG}
-        sqlalchemy.orm: {level: DEBUG}
+
+    # DEFAULT LOGGING FORMATTERS
     formatters:
       brief:
         format: '%(asctime)s %(levelname)-8s: %(message)s'
-        datefmt: '%y-%m-%d %H:%M:%S'
+        datefmt: '%H:%M:%S'
       precise:
         format: '%(asctime)s %(levelname)-8s: %(name)s[%(lineno)s]: %(message)s'
         datefmt: '%Y-%m-%d %H:%M:%S'
+
+    # DEFAULT LOGGING HANDLERS
+    handlers:
+      brief_console_handler:
+        class : logging.StreamHandler
+        formatter: brief
+        level: WARN
+        stream  : ext://sys.stdout
+      precise_console_handler:
+        class : logging.StreamHandler
+        formatter: precise
+        level: WARN
+        stream  : ext://sys.stdout
+      sqlalchemy_console_handler:
+        class : logging.StreamHandler
+        formatter: brief
+        level: WARN
+        stream  : ext://sys.stdout
+      sqlalchemy_rotating_file_handler:
+        class : logging.handlers.RotatingFileHandler
+        formatter: precise
+        level   : DEBUG
+        filename: sqlalchemy.log
+        maxBytes: 8192
+        backupCount: 3
+
+    # DEFAULT LOGGERS
+    loggers:
+      sqlalchemy: 
+        propagate: false
+        level: DEBUG
+        handlers: 
+          - sqlalchemy_rotating_file_handler
+      sqlalchemy.engine: {propagate: true, level: DEBUG}
+      sqlalchemy.pool: {propagate: true, level: DEBUG}
+      sqlalchemy.dialects: {propagate: true, level: DEBUG}
+      sqlalchemy.orm: {propagate: true, level: DEBUG}
+
 
 development:
   logging:
     dynaconf_merge: true
     handlers:
-      development_console_handler:
-        class : logging.StreamHandler
-        formatter: brief
-        level: INFO
-        stream  : ext://sys.stdout
       development_rotating_file_handler:
         class : logging.handlers.RotatingFileHandler
         formatter: precise
@@ -36,7 +63,7 @@ development:
     root:
       level: DEBUG
       handlers: 
-        - development_console_handler
+        - brief_console_handler
         - development_rotating_file_handler
 
 testing:
@@ -46,10 +73,16 @@ testing:
       testing_console_handler:
         class : logging.StreamHandler
         formatter: precise
-        level: WARNING
+        level: WARN
         stream  : ext://sys.stdout
+    loggers:
+      sqlalchemy: {level: WARN}
+      sqlalchemy.engine: {level: WARN}
+      sqlalchemy.pool: {level: WARN}
+      sqlalchemy.dialects: {level: WARN}
+      sqlalchemy.orm: {level: WARN}
     root:
-      level: WARNING
+      level: WARN
       handlers: 
         - testing_console_handler
 

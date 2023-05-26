@@ -5,6 +5,7 @@ TODO: error handling
 """
 import contextlib
 from pathlib import Path
+from logging import NullHandler
 
 from sqlalchemy import create_engine, text, Engine
 from sqlalchemy.engine import URL
@@ -27,10 +28,22 @@ def config_sqlalchemy_logging():
     https://docs.sqlalchemy.org/en/20/core/engines.html#dbengine-logging
     :returns: None
     """
-    load_logging_configuration(config.logging.sqlalchemy)
+    # load_logging_configuration()
+    # load_logging_configuration(config.logging.sqlalchemy)
     # for logger_name in ('engine', 'pool', 'dialects', 'orm'):
     #     get_logger(f'sqlalchemy.{logger_name}').setLevel(
     #                 config.logging)
+    # logger_ = get_logger('sqlalchemy')
+    # logger_.critical(str(logger_.handlers))
+    # logger_.addHandler(NullHandler)
+    # logger_.handlers = []
+    # logger_.critical(str(logger_.handlers))
+    # logger_.setLevel('DEBUG')
+    # for logger_name in ('engine', 'pool', 'dialects', 'orm'):
+    #     logger_ = get_logger(f'sqlalchemy.{logger_name}')
+    #     logger_.handlers = []
+    #     logger_.setLevel('DEBUG')
+    pass
 
 
 def _init_engine():
@@ -40,7 +53,7 @@ def _init_engine():
     """
     global _engine
     config_sqlalchemy_logging()
-    _engine = create_engine(URL.create(**config.database))
+    _engine = create_engine(URL.create(**config.database), echo=False, echo_pool=False)
 
 
 def get_engine() -> Engine:
@@ -66,12 +79,12 @@ def get_connection(begin_once: bool = True):
               for a transaction context
               (i.e. ``with get_engine as conn:...``)
     """
-    if begin_once:
-        connection = get_connection().begin
-    else:
-        connection = get_connection().connect
     try:
-        with connection as conn:
+        if begin_once:
+            connection = get_engine().begin
+        else:
+            connection = get_engine().connect
+        with connection() as conn:
             yield conn
     except Exception:
         raise
