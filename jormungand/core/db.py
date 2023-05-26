@@ -3,6 +3,7 @@
 TODO: better documentation for db module
 TODO: error handling
 """
+import contextlib
 from pathlib import Path
 
 from sqlalchemy import create_engine, text, Engine
@@ -51,6 +52,7 @@ def get_db_engine() -> Engine:
     return _engine
 
 
+@contextlib.contextmanager
 def get_db_connection(begin_once: bool = True):
     """Get an sqlalchemy database connection
 

@@ -1,3 +1,10 @@
+"""
+Logging configuration and handling.
+
+This module is a thin wrapper around the builtin logging module that
+mostly just makes sure logging configuration has been loaded before handing
+back logger objects.
+"""
 import logging
 import logging.config
 

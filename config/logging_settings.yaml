@@ -1,10 +1,12 @@
 default:
   logging:
     sqlalchemy:
-      engine: DEBUG
-      pool: DEBUG
-      dialects: DEBUG
-      orm: DEBUG
+      incremental: true
+      loggers:
+        sqlalchemy.engine: {level: DEBUG}
+        sqlalchemy.pool: {level: DEBUG}
+        sqlalchemy.dialects: {level: DEBUG}
+        sqlalchemy.orm: {level: DEBUG}
     version: 1
     formatters:
       brief:
