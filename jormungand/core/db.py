@@ -66,10 +66,16 @@ def get_db_connection(begin_once: bool = True):
               (i.e. ``with get_db_engine as conn:...``)
     """
     if begin_once:
-        connection = get_db_connection().begin()
+        connection = get_db_connection().begin
     else:
-        connection = get_db_connection().connect()
-    return connection
+        connection = get_db_connection().connect
+    try:
+        with connection as conn:
+            yield conn
+    except Exception:
+        raise
+    finally:
+        pass
 
 
 def init_db():
