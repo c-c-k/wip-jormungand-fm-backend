@@ -4,6 +4,9 @@ TODO: DOC: tests/dataset.py
 
 from datetime import datetime, timedelta
 
+from sqlalchemy import text
+
+from jormungand.core.db import get_connection
 from jormungand.dal.ddl import UserRole
 
 DATASET_VALID = {
@@ -14,7 +17,7 @@ DATASET_VALID = {
         # CUSTOMER USERS
         'customer_user_1': {
             'id': 51,
-            'user_role': UserRole.CUSTOMER,
+            'user_role': UserRole.CUSTOMER.value,
             'username': 'customer_user_1',
             'password': 'pass',
             'email': 'customer_user_1@email_1.com',
@@ -22,7 +25,7 @@ DATASET_VALID = {
         },
         'customer_user_2': {
             'id': 52,
-            'user_role': UserRole.CUSTOMER,
+            'user_role': UserRole.CUSTOMER.value,
             'username': 'customer_user_2',
             'password': 'pass',
             'email': 'customer_user_2@email_1.com',
@@ -32,7 +35,7 @@ DATASET_VALID = {
         # AIRLINE COMPANY USERS
         'airline_user_1': {
             'id': 61,
-            'user_role': UserRole.CUSTOMER,
+            'user_role': UserRole.CUSTOMER.value,
             'username': 'airline_user_1',
             'password': 'pass',
             'email': 'airline_user_1@email_1.com',
@@ -40,7 +43,7 @@ DATASET_VALID = {
         },
         'airline_user_2': {
             'id': 62,
-            'user_role': UserRole.CUSTOMER,
+            'user_role': UserRole.CUSTOMER.value,
             'username': 'airline_user_2',
             'password': 'pass',
             'email': 'airline_user_2@email_1.com',
@@ -50,7 +53,7 @@ DATASET_VALID = {
         # ADMINISTRATOR USERS
         'admin_user_1': {
             'id': 71,
-            'user_role': UserRole.CUSTOMER,
+            'user_role': UserRole.CUSTOMER.value,
             'username': 'admin_user_1',
             'password': 'pass',
             'email': 'admin_user_1@email_1.com',
@@ -58,7 +61,7 @@ DATASET_VALID = {
         },
         'admin_user_2': {
             'id': 72,
-            'user_role': UserRole.CUSTOMER,
+            'user_role': UserRole.CUSTOMER.value,
             'username': 'admin_user_2',
             'password': 'pass',
             'email': 'admin_user_2@email_1.com',
@@ -185,3 +188,71 @@ DATASET_VALID = {
 }
 DATASET_INVALID = {
 }
+
+TABLE_DEPENDANCEY_ORDER = {
+        'users': 1, 'countries': 2, 'airline_companies': 3,
+        'customers': 4, 'administrators': 5, 'flights': 6, 'tickets': 7}
+
+INSERTION_SQL = {    
+    'users': text("""
+    INSERT INTO users
+        ( id, user_role, username, password, email, avatar_url )
+    VALUES
+        ( :id, :user_role, :username, :password, :email, :avatar_url )
+    """),
+    'countries': text("""
+    INSERT INTO countries
+        ( id, name, flag_url )
+    VALUES
+        ( :id, :name, :flag_url )
+    """),
+    'airline_companies': text("""
+    INSERT INTO airline_companies
+        ( id, country_id, user_id, name )
+    VALUES
+        ( :id, :country_id, :user_id, :name )
+    """),
+    'customers': text("""
+    INSERT INTO customers
+        ( id, user_id, first_name, last_name, address, phone_number,
+        credit_card_number )
+    VALUES
+        ( :id, :user_id, :first_name, :last_name, :address, :phone_number,
+        :credit_card_number )
+    """),
+    'administrators': text("""
+    INSERT INTO administrators
+        ( id, user_id, first_name, last_name )
+    VALUES
+        ( :id, :user_id, :first_name, :last_name )
+    """),
+    'flights': text("""
+    INSERT INTO flights
+        ( id, airline_company_id, origin_country_id,
+        destination_country_id, departure_time, landing_time,
+        remaining_tickets )
+    VALUES
+        ( :id, :airline_company_id, :origin_country_id,
+        :destination_country_id, :departure_time, :landing_time,
+        :remaining_tickets )
+    """),
+    'tickets': text("""
+    INSERT INTO tickets
+        ( id, flight_id, customer_id)
+    VALUES
+        ( :id, :flight_id, :customer_id)
+    """)
+}
+
+
+def insert_dataset(dataset: dict):
+    sorted_table_names = sorted(
+            dataset.keys(),
+            key=lambda table_name: TABLE_DEPENDANCEY_ORDER[table_name])
+    # with open('/dev/shm/tt1', 'w') as conn:
+    with get_connection() as conn:
+        for table_name in sorted_table_names:
+            # print(INSERTION_SQL[table_name],
+            conn.execute(INSERTION_SQL[table_name],
+                         list(dataset[table_name].values()))
+
