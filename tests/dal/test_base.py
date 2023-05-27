@@ -1,9 +1,9 @@
 """
-TODO: tests.dal.test_ddl module docstring
+TODO: tests.dal.test_base module docstring
 """
 
 from sqlalchemy import text
-from jormungand.dal.ddl import UserRole
+from jormungand.dal.base import UserRole
 
 
 def test_init_db_init_roles(db_conn):

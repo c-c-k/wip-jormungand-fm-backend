@@ -1,5 +1,5 @@
 """
-TODO: dal.ddl module docstring
+TODO: dal.base module docstring
 """
 
 from enum import Enum
@@ -28,7 +28,7 @@ def init_db():
     schema = text(_SQL_DIR.joinpath('./schema.sql').read_text())
     stored_procedures = text(
             _SQL_DIR.joinpath('./stored_procedures.sql').read_text())
-    with db.get_connection() as conn:
+    with db.get_db_connection() as conn:
         conn.execute(schema)
         conn.execute(stored_procedures)
         conn.execute(text("""

@@ -59,7 +59,7 @@ def get_engine() -> Engine:
 
 
 @contextlib.contextmanager
-def get_connection(begin_once: bool = True):
+def get_db_connection(begin_once: bool = True):
     """Get an sqlalchemy database connection
 
     transaction context:

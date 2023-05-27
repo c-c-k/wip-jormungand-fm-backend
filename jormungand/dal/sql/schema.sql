@@ -62,7 +62,7 @@ CREATE TABLE flights (
 );
 
 CREATE TABLE tickets (
-  id  bigserial PRIMARY KEY,
+  id bigserial PRIMARY KEY,
   flight_id  bigint REFERENCES flights ON DELETE RESTRICT NOT NULL,
   customer_id  bigint REFERENCES customers ON DELETE RESTRICT NOT NULL,
   UNIQUE (flight_id, customer_id)

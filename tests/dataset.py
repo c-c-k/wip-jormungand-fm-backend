@@ -6,8 +6,7 @@ from datetime import datetime, timedelta
 
 from sqlalchemy import text
 
-from jormungand.core.db import get_connection
-from jormungand.dal.ddl import UserRole
+from jormungand.dal.base import UserRole
 
 DATASET_TEMPLATE = {
     'users': {
@@ -323,14 +322,11 @@ INSERTION_SQL = {
 }
 
 
-def insert_dataset(dataset: dict):
+def insert_dataset(connection, dataset: dict):
     sorted_table_names = sorted(
             dataset.keys(),
             key=lambda table_name: TABLE_DEPENDANCEY_ORDER[table_name])
-    # with open('/dev/shm/tt1', 'w') as conn:
-    with get_connection() as conn:
-        for table_name in sorted_table_names:
-            # print(INSERTION_SQL[table_name],
-            conn.execute(INSERTION_SQL[table_name],
-                         list(dataset[table_name].values()))
+    for table_name in sorted_table_names:
+        connection.execute(INSERTION_SQL[table_name],
+                           list(dataset[table_name].values()))
 
