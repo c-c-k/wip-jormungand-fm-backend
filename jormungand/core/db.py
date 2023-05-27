@@ -9,7 +9,7 @@ from logging import NullHandler
 from pathlib import Path
 
 from sqlalchemy import (
-    create_engine, Engine, MetaData, Table, text)
+    create_engine, Engine, MetaData, Table, text, Connection)
 from sqlalchemy.engine import URL
 
 from .config import config
@@ -17,27 +17,15 @@ from .logging import get_logger, load_logging_configuration
 
 logger = get_logger(__name__)
 
-_CURRENT_DIR = Path(__file__).parent
 _SQL_DIR = Path(__file__).parent.joinpath('sql')
+TABLE_NAMES = ('users', 'countries', 'administrators', 'airline_companies',
+               'customers', 'flights', 'tickets')
 
 _engine: Engine | None = None
-
+_tables: dict[str, Table] | None = None
 
 metadata_obj = MetaData()
-# table_Users = Table(
-#         'users', metadata_obj, autoload_with=get_db_engine())
-# table_Countries = Table(
-#         'countries', metadata_obj, autoload_with=get_db_engine())
-# table_Administrators = Table(
-#         'administrators', metadata_obj, autoload_with=get_db_engine())
-# table_Airline_companies = Table(
-#         'airline_companies', metadata_obj, autoload_with=get_db_engine())
-# table_Customers = Table(
-#         'customers', metadata_obj, autoload_with=get_db_engine())
-# table_Flights = Table(
-#         'flights', metadata_obj, autoload_with=get_db_engine())
-# table_Tickets = Table(
-#         'tickets', metadata_obj, autoload_with=get_db_engine())
+
 
 class UserRole(IntEnum):
     CUSTOMER = 1
@@ -67,10 +55,6 @@ def _init_engine():
 
     :returns: TODO
     """
-    global _engine
-    # config_sqlalchemy_logging()# TODO: REMOVE: this seems to be redundant
-    _engine = create_engine(
-            URL.create(**config.database), echo=False, echo_pool=False)
 
 
 def get_db_engine() -> Engine:
@@ -78,13 +62,30 @@ def get_db_engine() -> Engine:
 
     :returns: TODO
     """
+    global _engine
     if _engine is None:
-        _init_engine()
+        _engine = create_engine(URL.create(**config.database),
+                                echo=False, echo_pool=False)
     return _engine
 
 
+def get_tables():
+    """TODO: Docstring for _init_tables.
+
+    :returns: TODO
+    """
+    global _tables
+    if _tables is None:
+        _tables = {
+            table_name: Table(table_name, metadata_obj,
+                              autoload_with=get_db_engine())
+            for table_name in TABLE_NAMES
+        }
+    return _tables
+
+
 @contextlib.contextmanager
-def get_db_connection(begin_once: bool = True):
+def get_db_connection(begin_once: bool = True) -> Connection | object:
     """Get an sqlalchemy database connection
 
     transaction context:
@@ -93,8 +94,12 @@ def get_db_connection(begin_once: bool = True):
     :begin_mode: True (default) for begin once transaction context,
                  False for normal transaction context.
     :returns: A database connection that should usually be used
-              for a transaction context
+              in a transaction context
               (i.e. ``with get_engine as conn:...``)
+              .. note:: the exact returned object might not be an actual
+                        Connection but a wrapper around the Connection,
+                        however, as long as it's used in a with context the 
+                        behavior should be the same a Connection object.
     """
     try:
         if begin_once:
