@@ -33,7 +33,7 @@ default:
         formatter: precise
         level   : DEBUG
         filename: sqlalchemy.log
-        maxBytes: 8192
+        maxBytes: 1000000
         backupCount: 3
 
     # DEFAULT LOGGERS
@@ -58,7 +58,7 @@ development:
         formatter: precise
         level   : DEBUG
         filename: debug.log
-        maxBytes: 8192
+        maxBytes: 1000000
         backupCount: 3
     root:
       level: DEBUG
