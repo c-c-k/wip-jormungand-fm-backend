@@ -5,23 +5,9 @@ from sqlalchemy.engine import URL
 
 from jormungand.core.config import config
 from jormungand.core.logging import load_logging_configuration
-from jormungand.core import db
-from jormungand.dal.base import init_db
+from jormungand.core.db import init_db, get_db_connection
 
 _cleanup_db_engine = None
-
-# .. note::
-#       the following doesn't work because postgresql doesn't 
-#       allow dropping a database from within a stored procedure.
-#
-# CLEANUP_DB_STORED_PROCEDURE = """
-# CREATE OR REPLACE PROCEDURE cleanup_test_db(_test_db_name text)
-# LANGUAGE SQL
-# AS $$
-#     DROP DATABASE IF EXISTS _test_db_name (FORCE);
-#     CREATE DATABASE _test_db_name;
-# $$;
-# """.strip()
 
 
 def _init_cleanup_db_engine():
@@ -29,14 +15,6 @@ def _init_cleanup_db_engine():
     _cleanup_db_engine = create_engine(
             URL.create(**config['cleanup_database']),
             isolation_level='AUTOCOMMIT')
-# .. note::
-#       the following doesn't work because postgresql doesn't 
-#       allow dropping a database from within a stored procedure.
-#
-    # with _cleanup_db_engine.connect() as conn:
-    #     query = text(CLEANUP_DB_STORED_PROCEDURE)
-    #     conn.execute(query)
-    #     conn.commit()
 
 
 def _cleanup_test_db(test_db_name):
@@ -67,6 +45,6 @@ def set_test_logging(set_test_settings):
 def db_conn(set_test_settings):
     _cleanup_test_db(config['database.database'])
     init_db()
-    yield db.get_db_connection()
-
+    yield get_db_connection()
+ 
 

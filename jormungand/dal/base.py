@@ -2,39 +2,13 @@
 TODO: dal.base module docstring
 """
 
-from enum import Enum
+from enum import IntEnum
 from pathlib import Path
 
-from sqlalchemy import text
+from sqlalchemy import text, MetaData, Table
 
 from jormungand.core.logging import get_logger
-from jormungand.core import db
+from jormungand.core.db import get_db_connection, get_db_engine
 
 logger = get_logger(__name__)
 
-_SQL_DIR = Path(__file__).parent.joinpath('sql')
-
-
-class UserRole(Enum):
-    CUSTOMER = 1
-    AIRLINE_COMPANY = 2
-    ADMINISTRATOR = 3
-
-
-def init_db():
-    """TODO: Docstring for init_db. """
-
-    # TODO: existing db handling
-    schema = text(_SQL_DIR.joinpath('./schema.sql').read_text())
-    stored_procedures = text(
-            _SQL_DIR.joinpath('./stored_procedures.sql').read_text())
-    with db.get_db_connection() as conn:
-        conn.execute(schema)
-        conn.execute(stored_procedures)
-        conn.execute(text("""
-        INSERT INTO user_roles (id, role_name) VALUES (:id, :rolename);
-        """), [
-            {'id': user_role.value, 'rolename': user_role.name} 
-            for user_role in UserRole]
-        )
-    

@@ -6,13 +6,13 @@ from datetime import datetime, timedelta
 
 from sqlalchemy import text
 
-from jormungand.dal.base import UserRole
+from jormungand.core.db import UserRole
 
 DATASET_TEMPLATE = {
     'users': {
         'customer_user_1': {
             'id': 51,
-            'user_role': UserRole.CUSTOMER.value,
+            'user_role': int(UserRole.CUSTOMER),
             'username': 'customer_user_1',
             'password': 'pass',
             'email': 'customer_user_1@email_1.com',
@@ -20,7 +20,7 @@ DATASET_TEMPLATE = {
         },
         'airline_user_1': {
             'id': 61,
-            'user_role': UserRole.AIRLINE_COMPANY.value,
+            'user_role': int(UserRole.AIRLINE_COMPANY),
             'username': 'airline_user_1',
             'password': 'pass',
             'email': 'airline_user_1@email_1.com',
@@ -28,7 +28,7 @@ DATASET_TEMPLATE = {
         },
         'admin_user_1': {
             'id': 71,
-            'user_role': UserRole.ADMINISTRATOR.value,
+            'user_role': int(UserRole.ADMINISTRATOR),
             'username': 'admin_user_1',
             'password': 'pass',
             'email': 'admin_user_1@email_1.com',
