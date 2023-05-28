@@ -5,6 +5,7 @@ TODO: error handling
 """
 import contextlib
 from enum import IntEnum
+import itertools
 import logging
 from pathlib import Path
 
@@ -28,8 +29,14 @@ metadata_obj = MetaData()
 
 
 class Tables:
+    """TODO: doc"""
+    # IMPORTANT: The table names in ``table_names`` must appear in their
+    #            dependency (e.g. "user_roles" must be before "users" 
+    #            because "users" has a foreign key to "user_roles".
     table_names = ('user_roles', 'users', 'customers', 'administrators',
                    'countries', 'airline_companies', 'flights', 'tickets')
+    # The attributes below should be initialized by a call to load_db_tables
+    # during application startup or testing setup
     user_roles: Table = None
     users: Table = None
     customers: Table = None
@@ -38,6 +45,7 @@ class Tables:
     airline_companies: Table = None
     flights: Table = None
     tickets: Table = None
+    t_names_sort_key: dict[str, int] = None
 
     
 
@@ -93,23 +101,16 @@ def load_db_tables():
     for table_name in Tables.table_names:
         table = Table(table_name, metadata_obj, autoload_with=get_db_engine())
         setattr(Tables, table_name, table)
+    table_names_sort_key = dict(zip(Tables.table_names, itertools.count()))
+    setattr(Tables, 't_names_sort_key', table_names_sort_key)
 
 
-# TODO: REMOVE MAYBE: this might be redundant
-# def get_table(table_name: str) -> Table:
-#     """TODO: Docstring for _init_tables.
+def get_table_by_name(table_name: str) -> Table:
+    """TODO: Docstring for _init_tables.
 
-#     :returns: TODO
-#     """
-#     global _tables
-#     if _tables is None:
-#         _tables = {
-#             table_name: Table(table_name, metadata_obj,
-#                               autoload_with=get_db_engine())
-#             for table_name in TABLE_NAMES
-#         }
-
-#     return _tables[table_name]
+    :returns: TODO
+    """
+    return getattr(Tables, table_name, None)
 
 
 # TODO: REMOVE MAYBE: this might be redundant

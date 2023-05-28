@@ -1,12 +1,13 @@
 import pytest
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, insert
 from sqlalchemy.engine import URL
 
 from jormungand.core import load_core
 from jormungand.core.config import config
 from jormungand.core.logging import load_logging_configuration
-from jormungand.core.db import init_db, get_db_engine
+from jormungand.core.db import (
+    init_db, get_db_engine, Tables, get_table_by_name)
 
 _cleanup_db_engine = None
 
@@ -50,3 +51,4 @@ def db_engine():
     init_db()
     load_core(all_=False, db_tables_=True)
     yield get_db_engine()
+

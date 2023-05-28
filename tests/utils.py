@@ -4,9 +4,10 @@ TODO: DOC: tests/dataset.py
 
 from datetime import datetime, timedelta
 
-from sqlalchemy import text
+from sqlalchemy import text, insert, select, exists
 
-from jormungand.core.db import UserRole
+from jormungand.core.db import (
+    UserRole, Tables, get_table_by_name)
 
 DATASET_TEMPLATE = {
     'users': {
@@ -330,3 +331,22 @@ def insert_dataset(connection, dataset: dict):
         connection.execute(INSERTION_SQL[table_name],
                            list(dataset[table_name].values()))
 
+
+def setup_dataset(conn, dataset: dict):
+    used_table_names = sorted(
+            dataset.keys(),
+            key=lambda t_name: Tables.t_names_sort_key[t_name])
+    for table_name in used_table_names:
+        table = get_table_by_name(table_name)
+        conn.execute(
+            insert(table), tuple(dataset[table_name].values()))
+
+
+def compare_dataset_all(conn, dataset: dict):
+    used_table_names = dataset.keys()
+    for table_name in used_table_names:
+        table = get_table_by_name(table_name)
+        for entry in dataset[table_name].values():
+            stmt = select(table).filter_by(**entry)
+            result = conn.execute(stmt).all()
+            assert len(result) == 1
