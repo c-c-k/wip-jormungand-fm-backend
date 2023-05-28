@@ -3,15 +3,15 @@ TODO: dal.base module docstring
 """
 
 from enum import IntEnum
+import logging
 from pathlib import Path
 
 from sqlalchemy import (
     text, MetaData, Table, insert)
 
-from jormungand.core.logging import get_logger
 from jormungand.core.db import get_db_connection, get_db_engine
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def insert_(table_name, entries):

@@ -1,13 +1,13 @@
 """
 TODO: dal.user module docstring
 """
+import logging
 
 from sqlalchemy import text
 
-from jormungand.core.logging import get_logger
 from jormungand.core.db import get_db_connection
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 COLUMNS_LIST = ['id', 'user'_'role', 'username', 'password', 'email',
         'avatar'_'url']

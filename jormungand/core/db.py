@@ -5,7 +5,7 @@ TODO: error handling
 """
 import contextlib
 from enum import IntEnum
-from logging import NullHandler
+import logging
 from pathlib import Path
 
 from sqlalchemy import (
@@ -15,16 +15,31 @@ from sqlalchemy.engine import URL
 from .config import config
 from .logging import get_logger, load_logging_configuration
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 _SQL_DIR = Path(__file__).parent.joinpath('sql')
-TABLE_NAMES = ('users', 'countries', 'administrators', 'airline_companies',
-               'customers', 'flights', 'tickets')
+TABLE_NAMES = ('user_roles', 'users', 'customers', 'administrators',
+               'countries', 'airline_companies', 'flights', 'tickets')
 
 _engine: Engine | None = None
 _tables: dict[str, Table] | None = None
 
 metadata_obj = MetaData()
+
+
+class Tables:
+    table_names = ('user_roles', 'users', 'customers', 'administrators',
+                   'countries', 'airline_companies', 'flights', 'tickets')
+    user_roles: Table = None
+    users: Table = None
+    customers: Table = None
+    administrators: Table = None
+    countries: Table = None
+    airline_companies: Table = None
+    flights: Table = None
+    tickets: Table = None
+
+    
 
 
 class UserRole(IntEnum):
@@ -33,28 +48,30 @@ class UserRole(IntEnum):
     ADMINISTRATOR = 3
 
 
-def config_sqlalchemy_logging():
-    """Configures sqlalchemy logging
+# TODO: REMOVE: this seems to be redundant
+# def config_sqlalchemy_logging():
+#     """Configures sqlalchemy logging
 
-    Mostly this just sets the log-level for the sqlalchemy loggers.
-    for details see:
-    https://docs.sqlalchemy.org/en/20/core/engines.html#dbengine-logging
-    :returns: None
-    """
-    # TODO: REMOVE: this seems to be redundant
-    # load_logging_configuration()
-    # load_logging_configuration(config.logging.sqlalchemy)
-    # for logger_name in ('engine', 'pool', 'dialects', 'orm'):
-    #     get_logger(f'sqlalchemy.{logger_name}').setLevel(
-    #                 config.logging)
-    pass
+#     Mostly this just sets the log-level for the sqlalchemy loggers.
+#     for details see:
+#     https://docs.sqlalchemy.org/en/20/core/engines.html#dbengine-logging
+#     :returns: None
+#     """
+#     load_logging_configuration()
+#     load_logging_configuration(config.logging.sqlalchemy)
+#     for logger_name in ('engine', 'pool', 'dialects', 'orm'):
+#         get_logger(f'sqlalchemy.{logger_name}').setLevel(
+#                     config.logging)
 
 
-def _init_engine():
-    """TODO: Docstring for _init_engine.
+def load_db_engine():
+    """TODO: Docstring
 
     :returns: TODO
     """
+    global _engine
+    _engine = create_engine(URL.create(**config.database),
+                            echo=False, echo_pool=False)
 
 
 def get_db_engine() -> Engine:
@@ -62,26 +79,63 @@ def get_db_engine() -> Engine:
 
     :returns: TODO
     """
-    global _engine
-    if _engine is None:
-        _engine = create_engine(URL.create(**config.database),
-                                echo=False, echo_pool=False)
+    # DISABLED: should be loaded via load_core
+    # if _engine is None:
+    #     init_db_engine()
     return _engine
 
 
-def get_tables():
+def load_db_tables():
+    """TODO: Docstring
+
+    :returns: TODO
+    """
+    for table_name in Tables.table_names:
+        table = Table(table_name, metadata_obj, autoload_with=get_db_engine())
+        setattr(Tables, table_name, table)
+
+
+# TODO: REMOVE MAYBE: this might be redundant
+# def get_table(table_name: str) -> Table:
+#     """TODO: Docstring for _init_tables.
+
+#     :returns: TODO
+#     """
+#     global _tables
+#     if _tables is None:
+#         _tables = {
+#             table_name: Table(table_name, metadata_obj,
+#                               autoload_with=get_db_engine())
+#             for table_name in TABLE_NAMES
+#         }
+
+#     return _tables[table_name]
+
+
+# TODO: REMOVE MAYBE: this might be redundant
+# def get_tables(table_names: list[str] | str) -> dict[str, Table] | Table:
+#     global _tables
+#     if _tables is None:
+#         _tables = {
+#             table_name: Table(table_name, metadata_obj,
+#                               autoload_with=get_db_engine())
+#             for table_name in TABLE_NAMES
+#         }
+
+#     if isinstance(table_names, str):
+#         tables = _tables[table_names]
+#     else:
+#         tables = {table_name: _tables[table_name]
+#                   for table_name in table_names}
+#     return tables
+
+
+def get_colum_names(table: Table) -> list[str]:
     """TODO: Docstring for _init_tables.
 
     :returns: TODO
     """
-    global _tables
-    if _tables is None:
-        _tables = {
-            table_name: Table(table_name, metadata_obj,
-                              autoload_with=get_db_engine())
-            for table_name in TABLE_NAMES
-        }
-    return _tables
+    return [column.name for column in table.columns]
 
 
 @contextlib.contextmanager

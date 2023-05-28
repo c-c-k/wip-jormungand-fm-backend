@@ -1,9 +1,6 @@
-from pprint import pp
-
-from jormungand.core.config import config
+from jormungand.core import load_core
 
 
 def main():
-    # pp(config.as_dict(internal=True))
-    pass
+    load_core()
 

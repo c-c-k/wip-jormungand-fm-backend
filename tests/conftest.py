@@ -3,9 +3,10 @@ import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL
 
+from jormungand.core import load_core
 from jormungand.core.config import config
 from jormungand.core.logging import load_logging_configuration
-from jormungand.core.db import init_db, get_db_connection
+from jormungand.core.db import init_db, get_db_engine
 
 _cleanup_db_engine = None
 
@@ -38,13 +39,14 @@ def set_test_settings():
 @pytest.fixture(scope="session", autouse=True)
 def set_test_logging(set_test_settings):
     """Set global logging configuration for tests"""
+    load_core(all_=False, logging_=True)
     load_logging_configuration()
 
 
 @pytest.fixture
-def db_conn(set_test_settings):
+def db_engine():
     _cleanup_test_db(config['database.database'])
+    load_core(all_=False, db_engine_=True)
     init_db()
-    yield get_db_connection()
- 
-
+    load_core(all_=False, db_tables_=True)
+    yield get_db_engine()
