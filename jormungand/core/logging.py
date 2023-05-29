@@ -10,19 +10,19 @@ import logging.config
 
 from .config import config
 
-# _logging_configuration_loaded: bool = False
+_logging_configuration_loaded: bool = False
 
 
 def load_logging_configuration(logging_config: dict | None = None):
     """Load/reload configuration for the root logger.
     """
-    # global _logging_configuration_loaded
+    global _logging_configuration_loaded
 
     if logging_config is None:
         logging.config.dictConfig(config.logging)
     else:
         logging.config.dictConfig(logging_config)
-    # _logging_configuration_loaded = True
+    _logging_configuration_loaded = True
 
 
 def get_logger(name=None):
@@ -42,18 +42,12 @@ def get_logger(name=None):
     :param name: The name of the Logger instance to create or get.
     :return: A Logger instance corresponding to the name argument.
     """
-
-    # DISABLED: should be loaded via load_core
-    # if not _logging_configuration_loaded:
-    #     load_logging_configuration()
-
-    # DISABLED: use getLogger from logging until there is some clear 
-    #           need for and override.
-    # if name is None:
-    #     logger_ = logging.getLogger(
-    #             config.get('default_logger_name', 'root'))
-    # else:
-    #     logger_ = logging.getLogger(name)
-    # return logger_
-    pass
+    if not _logging_configuration_loaded:
+        load_logging_configuration()
+    if name is None:
+        logger_ = logging.getLogger(
+                config.get('default_logger_name', 'root'))
+    else:
+        logger_ = logging.getLogger(name)
+    return logger_
 

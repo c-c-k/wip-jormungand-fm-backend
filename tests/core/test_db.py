@@ -3,7 +3,7 @@ from copy import deepcopy
 import pytest
 from sqlalchemy import Engine, text, select
 
-from jormungand.core.db import get_db_engine, UserRole, Tables
+from jormungand.core import db
 from tests.utils import setup_dataset, compare_dataset_all
 
 DATASET_TEST_SETUP_DATASET = {
@@ -24,7 +24,7 @@ DATASET_TEST_SETUP_DATASET = {
     'users': {
         'user': {
             'id': 1,
-            'user_role': int(UserRole.CUSTOMER),
+            'user_role': int(db.UserRole.CUSTOMER),
             'username': 'user',
             'password': 'pass',
             'email': 'user@email.com',
@@ -40,10 +40,11 @@ def test_get_engine(db_engine):
     Test that the engine uses a test database
     """
     assert isinstance(db_engine, Engine)
-    assert db_engine is get_db_engine()
+    assert db_engine is db.get_db_engine()
     assert 'test' in str(db_engine.url)
 
 
+@pytest.mark.current
 def test_engine_uses_psycopg2(db_engine):
     """Test that sqlalchemy uses psycopg2 as a backend
 
@@ -57,20 +58,19 @@ def test_engine_uses_psycopg2(db_engine):
 
 def test_init_db_init_roles(db_engine):
     with db_engine.begin() as conn:
-        table = Tables.user_roles
+        table = db.get_table_by_name(db.TN_USER_ROLES)
         db_user_roles = conn.execute(select(table)).all()
-        assert len(db_user_roles) == len(UserRole)
+        assert len(db_user_roles) == len(db.UserRole)
         for role_id, role_name in db_user_roles:
-            assert UserRole[role_name].value == role_id
+            assert db.UserRole[role_name].value == role_id
 
 
-@pytest.mark.current
 def test_dataset_testing_helper_utils(db_engine):
     with db_engine.begin() as conn:
         dataset = DATASET_TEST_SETUP_DATASET
         setup_dataset(conn, dataset)
         compare_dataset_all(conn, dataset)
-        table = Tables.users
+        table = db.get_table_by_name(db.TN_USERS)
         entry = deepcopy(dataset[table.name]['user'])
         entry['username'] = 'wrong name'
         stmt = select(table).filter_by(**entry)

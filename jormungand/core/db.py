@@ -4,23 +4,37 @@ TODO: better documentation for db module
 TODO: error handling
 """
 import contextlib
-from enum import IntEnum
+from enum import IntEnum, Enum
 import itertools
-import logging
 from pathlib import Path
 
 from sqlalchemy import (
     create_engine, Engine, MetaData, Table, text, Connection)
 from sqlalchemy.engine import URL
+from sqlalchemy.exc import OperationalError
 
 from .config import config
 from .logging import get_logger, load_logging_configuration
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 _SQL_DIR = Path(__file__).parent.joinpath('sql')
-TABLE_NAMES = ('user_roles', 'users', 'customers', 'administrators',
-               'countries', 'airline_companies', 'flights', 'tickets')
+# Table Names
+TN_USER_ROLES = 'user_roles'
+TN_USERS = 'users'
+TN_CUSTOMERS = 'customers'
+TN_ADMINISTRATORS = 'administrators'
+TN_COUNTRIES = 'countries'
+TN_AIRLINE_COMPANIES = 'airline_companies'
+TN_FLIGHTS = 'flights'
+TN_TICKETS = 'tickets'
+TABLES_LAYERED_DEPENDANCY_ORDER = {
+    TN_USER_ROLES: 11, TN_COUNTRIES: 12,
+    TN_USERS: 21,
+    TN_CUSTOMERS: 31, TN_ADMINISTRATORS: 32, TN_AIRLINE_COMPANIES: 33,
+    TN_FLIGHTS: 41,
+    TN_TICKETS: 51
+}
 
 _engine: Engine | None = None
 _tables: dict[str, Table] | None = None
@@ -28,27 +42,25 @@ _tables: dict[str, Table] | None = None
 metadata_obj = MetaData()
 
 
-class Tables:
-    """TODO: doc"""
-    # IMPORTANT: The table names in ``table_names`` must appear in their
-    #            dependency (e.g. "user_roles" must be before "users" 
-    #            because "users" has a foreign key to "user_roles".
-    table_names = ('user_roles', 'users', 'customers', 'administrators',
-                   'countries', 'airline_companies', 'flights', 'tickets')
-    # The attributes below should be initialized by a call to load_db_tables
-    # during application startup or testing setup
-    user_roles: Table = None
-    users: Table = None
-    customers: Table = None
-    administrators: Table = None
-    countries: Table = None
-    airline_companies: Table = None
-    flights: Table = None
-    tickets: Table = None
-    t_names_sort_key: dict[str, int] = None
-
+# class Tables:
+#     """TODO: doc"""
+#     # IMPORTANT: The table names in ``table_names`` must appear in their
+#     #            dependency (e.g. "user_roles" must be before "users" 
+#     #            because "users" has a foreign key to "user_roles".
+#     table_names = ('user_roles', 'users', 'customers', 'administrators',
+#                    'countries', 'airline_companies', 'flights', 'tickets')
+#     # The attributes below should be initialized by a call to load_db_tables
+#     # during application startup or testing setup
+#     user_roles: Table = None
+#     users: Table = None
+#     customers: Table = None
+#     administrators: Table = None
+#     countries: Table = None
+#     airline_companies: Table = None
+#     flights: Table = None
+#     tickets: Table = None
+#     t_names_sort_key: dict[str, int] = None
     
-
 
 class UserRole(IntEnum):
     CUSTOMER = 1
@@ -78,8 +90,11 @@ def load_db_engine():
     :returns: TODO
     """
     global _engine
-    _engine = create_engine(URL.create(**config.database),
-                            echo=False, echo_pool=False)
+    try:
+        _engine = create_engine(URL.create(**config.database),
+                                echo=False, echo_pool=False)
+    except OperationalError:
+        raise Exception('here')
 
 
 def get_db_engine() -> Engine:
@@ -87,9 +102,8 @@ def get_db_engine() -> Engine:
 
     :returns: TODO
     """
-    # DISABLED: should be loaded via load_core
-    # if _engine is None:
-    #     init_db_engine()
+    if _engine is None:
+        load_db_engine()
     return _engine
 
 
@@ -98,11 +112,17 @@ def load_db_tables():
 
     :returns: TODO
     """
-    for table_name in Tables.table_names:
-        table = Table(table_name, metadata_obj, autoload_with=get_db_engine())
-        setattr(Tables, table_name, table)
-    table_names_sort_key = dict(zip(Tables.table_names, itertools.count()))
-    setattr(Tables, 't_names_sort_key', table_names_sort_key)
+    global _tables
+    _tables = {
+        table_name: Table(table_name, metadata_obj,
+                          autoload_with=get_db_engine())
+        for table_name in TABLES_LAYERED_DEPENDANCY_ORDER
+    }
+    # for table_name in TABLES_LAYERED_DEPENDANCY_ORDER.keys():
+    #     table = Table(table_name, metadata_obj, autoload_with=get_db_engine())
+    #     setattr(Tables, table_name, table)
+    # table_names_sort_key = dict(zip(Tables.table_names, itertools.count()))
+    # setattr(Tables, 't_names_sort_key', table_names_sort_key)
 
 
 def get_table_by_name(table_name: str) -> Table:
@@ -110,7 +130,29 @@ def get_table_by_name(table_name: str) -> Table:
 
     :returns: TODO
     """
-    return getattr(Tables, table_name, None)
+    if _tables is None:
+        load_db_tables()
+    return _tables[table_name]
+
+
+def table_name_sort_key(table_name):
+    """TODO: Docstring for table_name_sort_key.
+
+    :table_name: TODO
+    :returns: TODO
+
+    """
+    return TABLES_LAYERED_DEPENDANCY_ORDER[table_name]
+
+
+def get_colum_names(table: str | Table) -> list[str]:
+    """TODO: Docstring for _init_tables.
+
+    :returns: TODO
+    """
+    if isinstance(table, str):
+        table = get_table_by_name(table)
+    return tuple(column.name for column in table.columns)
 
 
 # TODO: REMOVE MAYBE: this might be redundant
@@ -129,14 +171,6 @@ def get_table_by_name(table_name: str) -> Table:
 #         tables = {table_name: _tables[table_name]
 #                   for table_name in table_names}
 #     return tables
-
-
-def get_colum_names(table: Table) -> list[str]:
-    """TODO: Docstring for _init_tables.
-
-    :returns: TODO
-    """
-    return [column.name for column in table.columns]
 
 
 @contextlib.contextmanager

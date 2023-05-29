@@ -75,12 +75,12 @@ testing:
         formatter: precise
         level: WARN
         stream  : ext://sys.stdout
-    loggers:
-      sqlalchemy: {level: WARN}
-      sqlalchemy.engine: {level: WARN}
-      sqlalchemy.pool: {level: WARN}
-      sqlalchemy.dialects: {level: WARN}
-      sqlalchemy.orm: {level: WARN}
+    # loggers:
+      # sqlalchemy: {level: WARN}
+      # sqlalchemy.engine: {level: WARN}
+      # sqlalchemy.pool: {level: WARN}
+      # sqlalchemy.dialects: {level: WARN}
+      # sqlalchemy.orm: {level: WARN}
     root:
       level: WARN
       handlers: 
