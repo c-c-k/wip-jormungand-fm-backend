@@ -2,3 +2,6 @@
 
 """
 
+
+class DataNotFoundError(Exception):
+    pass

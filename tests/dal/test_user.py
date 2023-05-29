@@ -29,12 +29,15 @@ from copy import deepcopy
 import pytest
 from sqlalchemy import Engine, text, select
 
-# from jormungand.core.dal.users import (
-#     get_by_id, get_all, add_one, add_many, update, remove)
 from jormungand.core import db
-from tests.utils import setup_dataset, compare_dataset_all
+from jormungand.core.exceptions import (
+    DataNotFoundError)
+from jormungand.dal.users import (
+    get_by_id)#, get_all, add_one, add_many, update, remove)
+from tests.utils import (
+    setup_dataset, compare_dataset_all, TempDBMethodScope, TempDBClassScope)
 
-DATASET_EXAMPLE_USERS = {
+DATASET_2_EXAMPLE_USERS = {
     'users': {
         'user_1': {
             'id': 1,
@@ -42,6 +45,7 @@ DATASET_EXAMPLE_USERS = {
             'username': 'user_1',
             'password': 'pass',
             'email': 'user_1@email.com',
+            'avatar_url': 'user_1.png',
         },
         'user_2': {
             'id': 2,
@@ -49,44 +53,43 @@ DATASET_EXAMPLE_USERS = {
             'username': 'user_2',
             'password': 'pass',
             'email': 'user_2@email.com',
+            'avatar_url': 'user_2.png',
         },
     }
 }
 
 
-# TODO: MEMO: move tempdb creator into test/utils, 
-#             call on module/class scope when as needed
 @pytest.mark.current
-class TestDALUsersWithDatasetExampleUsers:
-    def load_dataset_into_db(self, db_engine):
-        with db_engine.begin() as conn:
-            setup_dataset(conn, DATASET_EXAMPLE_USERS)
+class TestGet(TempDBMethodScope):
+    @pytest.fixture(scope="function")
+    def dataset(self, _engine):
+        with _engine.begin() as conn:
+            setup_dataset(conn, DATASET_2_EXAMPLE_USERS)
+        yield DATASET_2_EXAMPLE_USERS
+
+    def test_get_user_by_id_returns_user_info(self, _engine, dataset):
+        test_info = get_by_id(dataset['users']['user_1']['id'])
+        assert test_info == dataset['users']['user_1']
+
+
+    @pytest.mark.skip("TODO: test")
+    def test_get_all_users_returns_all_users_info(self, _engine, dataset):
+        pass
+
+
+    @pytest.mark.skip("TODO: test")
+    def test_get_all_users_when_no_users_exist_returns_empty(self, _engine):
+        pass
+
+
+    def test_get_non_existing_user_by_id_raises_exception(self, _engine, dataset):
+        with pytest.raises(DataNotFoundError) as excinfo:
+            test_info = get_by_id(-9999)
+            assert '-9999' in str(excinfo.value)
+
 
 @pytest.mark.skip("TODO: test")
-class TestGet:
-
-    @pytest.mark.skip("TODO: test")
-    def test_get_user_by_id_returns_user_info(self):
-        pass
-
-
-    @pytest.mark.skip("TODO: test")
-    def test_get_all_users_returns_all_users_info(self):
-        pass
-
-
-    @pytest.mark.skip("TODO: test")
-    def test_get_all_users_when_no_users_exist_returns_empty(self):
-        pass
-
-
-    @pytest.mark.skip("TODO: test")
-    def test_get_non_existing_user_by_id_raises_exception(self):
-        pass
-
-
-@pytest.mark.skip("TODO: test")
-class TestAddOne:
+class TestAddOne(TempDBMethodScope):
 
     @pytest.mark.skip("TODO: test")
     def test_add_new_user_adds_user(self):
@@ -114,7 +117,7 @@ class TestAddOne:
 
 
 @pytest.mark.skip("TODO: test")
-class TestAddMany:
+class TestAddMany(TempDBMethodScope):
 
     @pytest.mark.skip("TODO: test")
     def test_add_many_users_adds_new_users(self):
@@ -132,7 +135,7 @@ class TestAddMany:
 
 
 @pytest.mark.skip("TODO: test")
-class TestUpdate:
+class TestUpdate(TempDBMethodScope):
 
     @pytest.mark.skip("TODO: test")
     def test_update_user_updates_user(self):
@@ -155,7 +158,7 @@ class TestUpdate:
 
 
 @pytest.mark.skip("TODO: test")
-class TestDelete:
+class TestDelete(TempDBMethodScope):
 
     @pytest.mark.skip("TODO: test")
     def test_delete_user_deletes_user(self):
