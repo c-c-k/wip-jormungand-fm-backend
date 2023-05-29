@@ -11,7 +11,6 @@ from pathlib import Path
 from sqlalchemy import (
     create_engine, Engine, MetaData, Table, text, Connection)
 from sqlalchemy.engine import URL
-from sqlalchemy.exc import OperationalError
 
 from .config import config
 from .logging import get_logger, load_logging_configuration
@@ -84,17 +83,17 @@ class UserRole(IntEnum):
 #                     config.logging)
 
 
-def load_db_engine():
+def load_db_engine(testing_engine: Engine = None):
     """TODO: Docstring
 
     :returns: TODO
     """
     global _engine
-    try:
+    if testing_engine is None:
         _engine = create_engine(URL.create(**config.database),
                                 echo=False, echo_pool=False)
-    except OperationalError:
-        raise Exception('here')
+    else:
+        _engine = testing_engine
 
 
 def get_db_engine() -> Engine:

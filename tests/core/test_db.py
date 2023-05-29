@@ -44,7 +44,6 @@ def test_get_engine(db_engine):
     assert 'test' in str(db_engine.url)
 
 
-@pytest.mark.current
 def test_engine_uses_psycopg2(db_engine):
     """Test that sqlalchemy uses psycopg2 as a backend
 
