@@ -21,8 +21,32 @@ def set_test_logging(set_test_settings):
     load_logging_configuration()
 
 
-@pytest.fixture
-def db_engine():
+@pytest.fixture(scope='function')
+def func_db():
+    with create_temp_db_engine() as engine:
+        db.load_db_engine(engine)
+        db.init_db()
+        yield engine
+
+
+@pytest.fixture(scope='class')
+def cls_db():
+    with create_temp_db_engine() as engine:
+        db.load_db_engine(engine)
+        db.init_db()
+        yield engine
+
+
+@pytest.fixture(scope='module')
+def module_db():
+    with create_temp_db_engine() as engine:
+        db.load_db_engine(engine)
+        db.init_db()
+        yield engine
+
+
+@pytest.fixture(scope='session')
+def session_db():
     with create_temp_db_engine() as engine:
         db.load_db_engine(engine)
         db.init_db()

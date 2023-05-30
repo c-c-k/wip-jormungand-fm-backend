@@ -159,8 +159,8 @@ class TempDBClassScope:
 
 class TempDBMethodScope:
     @pytest.fixture(scope="function")
-    def _engine(self, db_engine):
-        yield db_engine
+    def _engine(self, func_db):
+        yield func_db
 
 
 

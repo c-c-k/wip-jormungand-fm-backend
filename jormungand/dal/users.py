@@ -26,14 +26,26 @@ def get_by_id(id_):
             raise DataNotFoundError(f'no user with id {id_} in database')
  
 
-# def add(new_users):
-#     """Adds one or more new users"""
-#     with get_db_connection() as conn:
-#         conn.execute(text("""
-#         INSERT INTO users
-#             ( id, user_role, username, password, email, avatar_url )
-#         VALUES
-#             ( :id, :user_role, :username, :password, :email, :avatar_url )
-#         """), new_users)
+def get_all():
+    with db.get_db_connection() as conn:
+        table = db.get_table_by_name(db.TN_USERS)
+        stmt = select(table)
+        result = conn.execute(stmt).mappings().all()
+        try:
+            return list(dict(mapping) for mapping in result)
+        except TypeError:
+            raise DataNotFoundError(f'no user with id {id_} in database')
+ 
+
+def add_one(data):
+    """Adds one user"""
+    pass
+    # with get_db_connection() as conn:
+    #     conn.execute(text("""
+    #     INSERT INTO users
+    #         ( id, user_role, username, password, email, avatar_url )
+    #     VALUES
+    #         ( :id, :user_role, :username, :password, :email, :avatar_url )
+    #     """), new_users)
  
 

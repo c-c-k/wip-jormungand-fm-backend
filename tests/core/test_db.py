@@ -33,18 +33,18 @@ DATASET_TEST_SETUP_DATASET = {
 }
 
 
-def test_get_engine(db_engine):
+def test_get_engine(func_db):
     """Test that get_engine correctly gets an engine
 
     Test that as per sqlalchemy recommendations only one engine is used
     Test that the engine uses a test database
     """
-    assert isinstance(db_engine, Engine)
-    assert db_engine is db.get_db_engine()
-    assert 'test' in str(db_engine.url)
+    assert isinstance(func_db, Engine)
+    assert func_db is db.get_db_engine()
+    assert 'test' in str(func_db.url)
 
 
-def test_engine_uses_psycopg2(db_engine):
+def test_engine_uses_psycopg2(func_db):
     """Test that sqlalchemy uses psycopg2 as a backend
 
     This test is meant to be a reminder that this project
@@ -52,11 +52,11 @@ def test_engine_uses_psycopg2(db_engine):
     and might thus contain some functionality that is specifically
     dependent on psycopg2.
     """
-    assert db_engine.driver == 'psycopg2'
+    assert func_db.driver == 'psycopg2'
 
 
-def test_init_db_init_roles(db_engine):
-    with db_engine.begin() as conn:
+def test_init_db_init_roles(func_db):
+    with func_db.begin() as conn:
         table = db.get_table_by_name(db.TN_USER_ROLES)
         db_user_roles = conn.execute(select(table)).all()
         assert len(db_user_roles) == len(db.UserRole)
@@ -64,8 +64,8 @@ def test_init_db_init_roles(db_engine):
             assert db.UserRole[role_name].value == role_id
 
 
-def test_dataset_testing_helper_utils(db_engine):
-    with db_engine.begin() as conn:
+def test_dataset_testing_helper_utils(func_db):
+    with func_db.begin() as conn:
         dataset = DATASET_TEST_SETUP_DATASET
         setup_dataset(conn, dataset)
         compare_dataset_all(conn, dataset)
