@@ -9,7 +9,7 @@ from random import randint
 
 import pytest
 from sqlalchemy import (
-        create_engine, Engine, text, insert, select, exists)
+        create_engine, Engine, text, insert, select, exists, Table)
 from sqlalchemy.engine import URL
 from sqlalchemy.exc import OperationalError
 
@@ -148,37 +148,28 @@ def create_temp_db_engine():
                 )
 
 
-class TempDBClassScope:
-    @pytest.fixture(scope="class")
-    def _engine(self):
-        with create_temp_db_engine() as engine_:
-            db.load_db_engine(engine_)
-            db.init_db()
-            yield engine_
-
-
-class TempDBMethodScope:
-    @pytest.fixture(scope="function")
-    def _engine(self, func_db):
-        yield func_db
-
-
-
-def setup_dataset(conn, dataset: dict):
+def db_load_dataset(engine_: Engine, dataset: dict):
     used_table_names = sorted(
             dataset.keys(),
             key=db.table_name_sort_key)
-    for table_name in used_table_names:
-        table = db.get_table_by_name(table_name)
-        conn.execute(
-            insert(table), tuple(dataset[table_name].values()))
+    with engine_.begin() as conn:
+        for table_name in used_table_names:
+            table = db.get_table_by_name(table_name)
+            conn.execute(
+                insert(table), tuple(dataset[table_name].values()))
 
 
-def compare_dataset_all(conn, dataset: dict):
-    used_table_names = dataset.keys()
-    for table_name in used_table_names:
+def data_in_table(engine_: Engine, data: list[dict], table_name: str):
+    with engine_.begin() as conn:
         table = db.get_table_by_name(table_name)
-        for entry in dataset[table_name].values():
+        for entry in data:
             stmt = select(table).filter_by(**entry)
             result = conn.execute(stmt).all()
             assert len(result) == 1
+
+
+def dataset_in_db(engine_: Engine, dataset: dict):
+    used_table_names = dataset.keys()
+    for table_name in used_table_names:
+        data = dataset[table_name].values()
+        data_in_table(engine_, data, table_name)
