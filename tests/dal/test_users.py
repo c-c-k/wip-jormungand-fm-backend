@@ -1,29 +1,3 @@
-"""
-    get_by_id, get_all
-test get user by id returns user data
-test get all users returns all users data as list
-test get all users when no users exist returns empty list
-test get non existing user by id raises exception
-    add one
-test add new user adds user
-test add new user returns user data with id
-test add existing user returns user data with id
-test add existing user does not raise exception
-test add new user with invalid data raises exception
-    add many
-test add many users adds new users
-test add many users returns users data with id for all input users
-test add many users with some or all users existing does not raise exception
-    update
-test update user updates user
-test update user returns updated user data
-test update non existing user raises exception
-test update user with invalid data raises exception
-    delete
-test delete user deletes user
-test delete user returns none
-test delete non existing user raises exception
-"""
 from copy import deepcopy
 from operator import itemgetter
 
@@ -32,9 +6,9 @@ from sqlalchemy import Engine, text, select
 
 from jormungand.core import db
 from jormungand.core.exceptions import (
-    DataNotFoundError)
+    DataNotFoundError, InvalidDataError)
 from jormungand.dal import users
-from tests.utils import db_load_dataset, dataset_in_db
+from tests.utils import db_load_dataset, dataset_in_db, data_in_table
 
 DATASET_2_USERS = {
     'users': {
@@ -82,36 +56,55 @@ class TestGet:
 
     def test_get_non_existing_user_by_id_raises_exception(self, tmp_db):
         with pytest.raises(DataNotFoundError) as excinfo:
-            test_data = users.get_by_id(-1)
+            users.get_by_id(-1)
             assert '-1' in str(excinfo.value)
 
 
 @pytest.mark.current
 class TestAddOne:
-    @pytest.mark.skip("TODO: test")
-    def test_add_new_user_adds_user(self, temp_db):
-        user_data = DATASET_2_USERS['users']['user_1']
-        users.add_one(user_data)
+    dataset = DATASET_2_USERS
+
+    @property
+    def data_user_1_copy_no_id(self) -> dict:
+        data = deepcopy(self.dataset['users']['user_1'])
+        data.pop('id')
+        return data
+    
+    def test_add_new_user_adds_user(self, tmp_db):
+        data = self.data_user_1_copy_no_id
+        table = db.get_table_by_name(db.TN_USERS)
+        users.add_one(data)
+        data_in_table(tmp_db, data, table)
 
 
-    @pytest.mark.skip("TODO: test")
-    def test_add_new_user_returns_user_data_with_id(self):
-        pass
+    def test_add_new_user_returns_user_data_with_id(self, tmp_db):
+        data = self.data_user_1_copy_no_id
+        return_data = users.add_one(data)
+        assert return_data.pop('id', None) is not None
+        assert data == return_data
 
 
-    @pytest.mark.skip("TODO: test")
-    def test_add_existing_user_returns_user_data_with_id(self):
-        pass
+    def test_add_existing_user_returns_user_data_with_id(self, tmp_db):
+        db_load_dataset(tmp_db, self.dataset)
+        data = self.data_user_1_copy_no_id
+        return_data = users.add_one(data)
+        assert return_data.pop('id', None) is not None
+        assert data == return_data
+        
 
 
-    @pytest.mark.skip("TODO: test")
-    def test_add_existing_user_does_not_raise_exception(self):
-        pass
+    def test_add_existing_user_does_not_raise_exception(self, tmp_db):
+        db_load_dataset(tmp_db, self.dataset)
+        data = self.data_user_1_copy_no_id
+        users.add_one(data)
 
 
-    @pytest.mark.skip("TODO: test")
-    def test_add_new_user_with_invalid_data_raises_exception(self):
-        pass
+    def test_add_new_user_with_invalid_data_raises_exception(self, tmp_db):
+        data = self.data_user_1_copy_no_id
+        data.pop('username')
+        with pytest.raises(InvalidDataError) as excinfo:
+            users.add_one(data)
+        assert 'username' in str(excinfo.value)
 
 
 @pytest.mark.skip("TODO: test")

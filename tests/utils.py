@@ -159,9 +159,13 @@ def db_load_dataset(engine_: Engine, dataset: dict):
                 insert(table), tuple(dataset[table_name].values()))
 
 
-def data_in_table(engine_: Engine, data: list[dict], table_name: str):
+def data_in_table(
+        engine_: Engine, data: list[dict] | dict, table: str | Table):
+    if isinstance(table, str):
+        table = db.get_table_by_name(table)
+    if isinstance(data, dict):
+        data = [data]
     with engine_.begin() as conn:
-        table = db.get_table_by_name(table_name)
         for entry in data:
             stmt = select(table).filter_by(**entry)
             result = conn.execute(stmt).all()

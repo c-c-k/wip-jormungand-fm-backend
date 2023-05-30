@@ -3,5 +3,9 @@
 """
 
 
+class InvalidDataError(Exception):
+    pass
+
+
 class DataNotFoundError(Exception):
     pass

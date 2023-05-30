@@ -2,11 +2,12 @@
 TODO: dal.user module docstring
 """
 
-from sqlalchemy import select
+from sqlalchemy import select, insert
+from sqlalchemy.exc import IntegrityError
 
 from jormungand.core import db
 from jormungand.core.exceptions import (
-    DataNotFoundError)
+    DataNotFoundError, InvalidDataError)
 from jormungand.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -39,13 +40,31 @@ def get_all():
 
 def add_one(data):
     """Adds one user"""
-    pass
-    # with get_db_connection() as conn:
-    #     conn.execute(text("""
-    #     INSERT INTO users
-    #         ( id, user_role, username, password, email, avatar_url )
-    #     VALUES
-    #         ( :id, :user_role, :username, :password, :email, :avatar_url )
-    #     """), new_users)
+    with db.get_db_connection() as conn:
+        table = db.get_table_by_name(db.TN_USERS)
+        stmt = insert(table).values(data).returning(table)
+        # raise Exception(str(stmt))
+        try:
+            result = conn.execute(stmt, data).mappings().one()
+        except IntegrityError as error:
+            if 'unique' in str(error):
+                with db.get_db_connection() as conn:
+                    stmt = (
+                            select(table)
+                            .where(table.c.username == data['username'])
+                    )
+                    result = conn.execute(stmt, data).mappings().one()
+            else:
+                raise InvalidDataError(str(error))
+        return dict(result)
+        # stmt = select(table)
+        # for table_name in used_table_names:
+        #     table = db.get_table_by_name(table_name)
+        # conn.execute(text("""
+        # INSERT INTO users
+        #     ( id, user_role, username, password, email, avatar_url )
+        # VALUES
+        #     ( :id, :user_role, :username, :password, :email, :avatar_url )
+        # """), new_users)
  
 
