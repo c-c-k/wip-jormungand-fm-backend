@@ -42,20 +42,19 @@ def get_dataset_2_users() -> dict:
     return dataset
 
 
-def get_data_1_user_no_id() -> dict:
+def get_data_1_users() -> dict:
     dataset = get_dataset_1_user()
     data = dataset["users"]["user_1"]
     return data
 
 
-def get_data_2_users_no_id() -> dict:
+def get_data_2_users() -> dict:
     dataset = get_dataset_2_users()
     data = dataset["users"]
     return data
 
 
 class TestGet:
-    @pytest.mark.current
     def test_get_user_by_id_returns_user_data(self, tmp_db):
         dataset = get_dataset_2_users()
         db_load_dataset(tmp_db, dataset)
@@ -82,13 +81,13 @@ class TestGet:
 
 class TestAddOne:
     def test_add_new_user_adds_user(self, tmp_db):
-        data = get_data_1_user_no_id()
+        data = get_data_1_users()
         table = db.get_table_by_name(db.TN_USERS)
         users.add_one(data)
         data_in_table(tmp_db, data, table)
 
     def test_add_new_user_returns_user_data_with_id(self, tmp_db):
-        data = get_data_1_user_no_id()
+        data = get_data_1_users()
         return_data = users.add_one(data)
         assert return_data.pop("id", None) is not None
         assert data == return_data
@@ -96,7 +95,7 @@ class TestAddOne:
     @pytest.mark.skip(reason="should raise exception instead")
     def test_add_existing_user_returns_user_data_with_id(self, tmp_db):
         dataset = get_dataset_1_user()
-        data = get_data_1_user_no_id()
+        data = get_data_1_users()
         db_load_dataset(tmp_db, dataset)
         return_data = users.add_one(data)
         assert return_data.pop("id", None) is not None
@@ -104,14 +103,14 @@ class TestAddOne:
 
     def test_add_existing_user_raises_integrity_error(self, tmp_db):
         dataset = get_dataset_1_user()
-        data = get_data_1_user_no_id()
+        data = get_data_1_users()
         db_load_dataset(tmp_db, dataset)
         with pytest.raises(IntegrityError) as excinfo:
             users.add_one(data)
         assert "username" in str(excinfo.value)
 
     def test_add_new_user_with_invalid_data_raises_integrity_error(self, tmp_db):
-        data = get_data_1_user_no_id()
+        data = get_data_1_users()
         data.pop("username")
         with pytest.raises(IntegrityError) as excinfo:
             users.add_one(data)
@@ -120,7 +119,7 @@ class TestAddOne:
 
 class TestAddMany:
     def test_add_many_users_adds_new_users(self, tmp_db):
-        data = get_data_2_users_no_id()
+        data = get_data_2_users()
         table = db.get_table_by_name(db.TN_USERS)
         users.add_many(data.values())
         data_in_table(tmp_db, data.values(), table)
@@ -128,7 +127,7 @@ class TestAddMany:
     def test_add_many_new_users_returns_users_data_with_id_for_all_input_users(
         self, tmp_db
     ):
-        data = get_data_2_users_no_id()
+        data = get_data_2_users()
         return_data = users.add_many(data.values())
         assert len(return_data) == len(data)
         for entry in return_data:
@@ -137,7 +136,7 @@ class TestAddMany:
 
     def test_add_many_users_with_some_users_existing_adds_new_users(self, tmp_db):
         dataset = get_dataset_1_user()
-        data = get_data_2_users_no_id()
+        data = get_data_2_users()
         table = db.get_table_by_name(db.TN_USERS)
         db_load_dataset(tmp_db, dataset)
         users.add_many(data.values())
@@ -145,7 +144,7 @@ class TestAddMany:
 
     def test_add_many_users_with_some_users_existing_returns_user_data_only_for_new_users(self, tmp_db):
         dataset = get_dataset_1_user()
-        data = get_data_2_users_no_id()
+        data = get_data_2_users()
         db_load_dataset(tmp_db, dataset)
         return_data = users.add_many(data.values())
         data.pop("user_1")
@@ -158,7 +157,7 @@ class TestAddMany:
         self, tmp_db
     ):
         dataset = get_dataset_1_user()
-        data = get_data_2_users_no_id()
+        data = get_data_2_users()
         db_load_dataset(tmp_db, dataset)
         users.add_many(data.values())
 
@@ -166,22 +165,30 @@ class TestAddMany:
         self, tmp_db
     ):
         dataset = get_dataset_2_users()
-        data_input = get_data_2_users_no_id()
+        data_input = get_data_2_users()
         db_load_dataset(tmp_db, dataset)
         users.add_many(data_input.values())
 
     def test_add_many_users_with_all_users_existing_returns_empty_list(self, tmp_db):
         dataset = get_dataset_2_users()
-        data_input = get_data_2_users_no_id()
+        data_input = get_data_2_users()
         db_load_dataset(tmp_db, dataset)
         return_data = users.add_many(data_input.values())
         assert return_data == []
 
 
-@pytest.mark.skip("TODO: test")
+@pytest.mark.current
 class TestUpdate:
     @pytest.mark.skip("TODO: test")
     def test_update_user_updates_user(self, tmp_db):
+        dataset = get_dataset_2_user()
+        data = get_data_2_users()
+        # MEMO: make get data from dataset helper
+        table = db.get_table_by_name(db.TN_USERS)
+        db_load_dataset(tmp_db, dataset)
+        data["user_1"]
+        users.add_many(data.values())
+        data_in_table(tmp_db, data.values(), table)
         pass
 
     @pytest.mark.skip("TODO: test")

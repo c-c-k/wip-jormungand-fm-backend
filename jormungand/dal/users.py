@@ -62,16 +62,8 @@ def add_many(data: list[dict]) -> list[dict]:
                 entry for entry in data
                 if entry["username"] in new_usernames
                 ]
-        # new_users_data = []
-        # for entry in data:
-        #     if entry["username"] not in existing_usernames:
-        #         new_users_data.append(entry)
         if new_users_data != []:
-            stmt = (
-                    insert(table).values(new_users_data)
-                    .returning(table)
-                    # .where(table.c.username.in_(new_usernames))
-                    )
+            stmt = insert(table).values(new_users_data).returning(table)
             result = conn.execute(stmt).mappings().all()
             new_users_data = [dict(row) for row in result]
         return new_users_data
