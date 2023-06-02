@@ -10,6 +10,7 @@ from tests.utils import create_temp_db_engine
 
 logger = getLogger(__name__)
 
+
 @pytest.fixture(scope="session", autouse=True)
 def set_test_settings():
     config.configure(FORCE_ENV_FOR_DYNACONF="testing")
@@ -23,7 +24,9 @@ def set_test_logging(set_test_settings):
 
 @pytest.fixture()
 def tmp_db():
+    db.set_level_sqlalchemy_loggers("WARN")
     with create_temp_db_engine() as engine:
         db.load_db_engine(engine)
         db.init_db()
+        db.set_level_sqlalchemy_loggers("DEBUG")
         yield engine

@@ -2,11 +2,12 @@
 TODO: dal.user module docstring
 """
 
+from warnings import warn
+
 from sqlalchemy import select, insert
 
 from jormungand.core import db
-from jormungand.core.exceptions import (
-    DataNotFoundError, InvalidDataError)
+from jormungand.core.exceptions import DataNotFoundError
 from jormungand.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -23,8 +24,8 @@ def get_by_id(id_):
         try:
             return dict(result)
         except TypeError:
-            raise DataNotFoundError(f'no user with id {id_} in database')
- 
+            raise DataNotFoundError(f"no user with id {id_} in database")
+
 
 def get_all():
     with db.get_db_connection() as conn:
@@ -34,17 +35,43 @@ def get_all():
         try:
             return list(dict(mapping) for mapping in result)
         except TypeError:
-            raise DataNotFoundError(f'no user with id {id_} in database')
- 
+            raise DataNotFoundError("no users in database")
 
-def add_one(data: dict):
+
+def add_one(data: dict) -> dict:
     """Adds one user"""
+    table = db.get_table_by_name(db.TN_USERS)
     with db.get_db_connection() as conn:
-        table = db.get_table_by_name(db.TN_USERS)
         stmt = insert(table).values(data).returning(table)
         result = conn.execute(stmt, data).mappings().one()
         return dict(result)
- 
 
-def add_many(data: list[dict]):
-    pass
+
+def add_many(data: list[dict]) -> list[dict]:
+    input_user_names = [entry["username"] for entry in data]
+    table = db.get_table_by_name(db.TN_USERS)
+    with db.get_db_connection() as conn:
+        stmt = (
+                select(table.c.username)
+                .where(table.c.username.in_(input_user_names))
+                )
+        result = conn.execute(stmt).all()
+        existing_usernames = set(row[0] for row in result)
+        new_usernames = set(input_user_names) - existing_usernames
+        new_users_data = [
+                entry for entry in data
+                if entry["username"] in new_usernames
+                ]
+        # new_users_data = []
+        # for entry in data:
+        #     if entry["username"] not in existing_usernames:
+        #         new_users_data.append(entry)
+        if new_users_data != []:
+            stmt = (
+                    insert(table).values(new_users_data)
+                    .returning(table)
+                    # .where(table.c.username.in_(new_usernames))
+                    )
+            result = conn.execute(stmt).mappings().all()
+            new_users_data = [dict(row) for row in result]
+        return new_users_data

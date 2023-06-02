@@ -24,7 +24,6 @@ _cleanup_db_engine: Engine | None = None
 DATASET_TEMPLATE = {
     'users': {
         'customer_user_1': {
-            'id': 51,
             'user_role': int(db.UserRole.CUSTOMER),
             'username': 'customer_user_1',
             'password': 'pass',
@@ -32,7 +31,6 @@ DATASET_TEMPLATE = {
             'avatar_url': 'user_avatars/customer_user_1.png',
         },
         'airline_user_1': {
-            'id': 61,
             'user_role': int(db.UserRole.AIRLINE_COMPANY),
             'username': 'airline_user_1',
             'password': 'pass',
@@ -40,7 +38,6 @@ DATASET_TEMPLATE = {
             'avatar_url': 'user_avatars/airline_user_1.png',
         },
         'admin_user_1': {
-            'id': 71,
             'user_role': int(db.UserRole.ADMINISTRATOR),
             'username': 'admin_user_1',
             'password': 'pass',
@@ -50,14 +47,12 @@ DATASET_TEMPLATE = {
     },
     'countries': {
         'country_1': {
-            'id': 61,
             'name': 'country_1',
             'flag_url': 'country_1.png',
         },
     },
     'airline_companies': {
         'airline_company_1': {
-            'id': 61,
             'country_id': 61,
             'user_id': 61,
             'name': 'airline_company_1',
@@ -65,7 +60,6 @@ DATASET_TEMPLATE = {
     },
     'customers': {
         'customer_1': {
-            'id': 51,
             'user_id': 51,
             'first_name': 'customer_1_first_name',
             'last_name': 'customer_1_last_name',
@@ -76,7 +70,6 @@ DATASET_TEMPLATE = {
     },
     'administrators': {
         'administrator_1': {
-            'id': 71,
             'user_id': 71,
             'first_name': 'administrator_1_first_name',
             'last_name': 'administrator_1_last_name',
@@ -84,7 +77,6 @@ DATASET_TEMPLATE = {
     },
     'flights': {
         'flight_template_dt_now': {
-            'id': 1,
             'airline_company_id': 61,
             'origin_country_id': 81,
             'destination_country_id': 881,
@@ -95,7 +87,6 @@ DATASET_TEMPLATE = {
     },
     'tickets': {
         'ticket_template': {
-            'id': 1,
             'flight_id': 1,
             'customer_id': 51,
         },
@@ -149,14 +140,21 @@ def create_temp_db_engine():
 
 
 def db_load_dataset(engine_: Engine, dataset: dict):
+    # IMPORTANT: entries in the input dataset must not contain
+    #            values for auto incrementing primary keys as
+    #            this would interfere with the sqlalchemy auto
+    #            increment mechanism.
     used_table_names = sorted(
             dataset.keys(),
             key=db.table_name_sort_key)
     with engine_.begin() as conn:
         for table_name in used_table_names:
             table = db.get_table_by_name(table_name)
-            conn.execute(
-                insert(table), tuple(dataset[table_name].values()))
+            for entry in dataset[table_name].values():
+                stmt = insert(table).values(entry).returning(table)
+                result = conn.execute(stmt).mappings().one()
+                entry.update(result)
+
 
 
 def data_in_table(

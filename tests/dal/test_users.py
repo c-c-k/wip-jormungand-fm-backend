@@ -2,6 +2,7 @@ from copy import deepcopy
 from operator import itemgetter
 
 import pytest
+from sqlalchemy import insert
 from sqlalchemy.exc import IntegrityError
 
 from jormungand.core import db
@@ -12,7 +13,6 @@ from tests.utils import db_load_dataset, data_in_table
 DATASET_2_USERS = {
     "users": {
         "user_1": {
-            "id": 1,
             "user_role": int(db.UserRole.CUSTOMER),
             "username": "user_1",
             "password": "pass",
@@ -20,7 +20,6 @@ DATASET_2_USERS = {
             "avatar_url": "user_1.png",
         },
         "user_2": {
-            "id": 2,
             "user_role": int(db.UserRole.CUSTOMER),
             "username": "user_2",
             "password": "pass",
@@ -46,19 +45,17 @@ def get_dataset_2_users() -> dict:
 def get_data_1_user_no_id() -> dict:
     dataset = get_dataset_1_user()
     data = dataset["users"]["user_1"]
-    data.pop("id")
     return data
 
 
 def get_data_2_users_no_id() -> dict:
     dataset = get_dataset_2_users()
     data = dataset["users"]
-    for user_data in data.values():
-        user_data.pop("id")
     return data
 
 
 class TestGet:
+    @pytest.mark.current
     def test_get_user_by_id_returns_user_data(self, tmp_db):
         dataset = get_dataset_2_users()
         db_load_dataset(tmp_db, dataset)
@@ -121,7 +118,6 @@ class TestAddOne:
         assert "username" in str(excinfo.value)
 
 
-@pytest.mark.current
 class TestAddMany:
     def test_add_many_users_adds_new_users(self, tmp_db):
         data = get_data_2_users_no_id()
@@ -139,14 +135,6 @@ class TestAddMany:
             assert entry.pop("id", None) is not None
             assert entry == data[entry["username"]]
 
-    def test_add_many_users_with_some_users_existing_does_not_raise_exception(
-        self, tmp_db
-    ):
-        dataset = get_dataset_1_user()
-        data_input = get_data_2_users_no_id()
-        db_load_dataset(tmp_db, dataset)
-        users.add_many(data_input)
-
     def test_add_many_users_with_some_users_existing_adds_new_users(self, tmp_db):
         dataset = get_dataset_1_user()
         data = get_data_2_users_no_id()
@@ -155,19 +143,38 @@ class TestAddMany:
         users.add_many(data.values())
         data_in_table(tmp_db, data.values(), table)
 
+    def test_add_many_users_with_some_users_existing_returns_user_data_only_for_new_users(self, tmp_db):
+        dataset = get_dataset_1_user()
+        data = get_data_2_users_no_id()
+        db_load_dataset(tmp_db, dataset)
+        return_data = users.add_many(data.values())
+        data.pop("user_1")
+        assert len(return_data) == len(data)
+        for entry in return_data:
+            assert entry.pop("id", None) is not None
+            assert entry == data[entry["username"]]
+
+    def test_add_many_users_with_some_users_existing_does_not_raise_exception(
+        self, tmp_db
+    ):
+        dataset = get_dataset_1_user()
+        data = get_data_2_users_no_id()
+        db_load_dataset(tmp_db, dataset)
+        users.add_many(data.values())
+
     def test_add_many_users_with_all_users_existing_does_not_raise_exception(
         self, tmp_db
     ):
         dataset = get_dataset_2_users()
         data_input = get_data_2_users_no_id()
         db_load_dataset(tmp_db, dataset)
-        users.add_many(data_input)
+        users.add_many(data_input.values())
 
     def test_add_many_users_with_all_users_existing_returns_empty_list(self, tmp_db):
         dataset = get_dataset_2_users()
         data_input = get_data_2_users_no_id()
         db_load_dataset(tmp_db, dataset)
-        return_data = users.add_many(data_input)
+        return_data = users.add_many(data_input.values())
         assert return_data == []
 
 
@@ -204,8 +211,3 @@ class TestDelete:
     def test_delete_non_existing_user_raises_exception(self, tmp_db):
         pass
 
-    def test_1(self):
-        # """TEST__________!"""
-        assert 1 == 0
-        # with db_engine.begin() as conn:
-        #     compare_dataset_all(conn, DATASET_EXAMPLE_USERS)

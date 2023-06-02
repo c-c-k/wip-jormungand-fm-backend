@@ -16,6 +16,15 @@ from .config import config
 from .logging import get_logger, load_logging_configuration
 
 logger = get_logger(__name__)
+sa_loggers = tuple(
+    get_logger(sa_logger_name)
+    for sa_logger_name in (
+        "sqlalchemy.engine",
+        "sqlalchemy.pool",
+        "sqlalchemy.dialects",
+        "sqlalchemy.orm",
+    )
+)
 
 _SQL_DIR = Path(__file__).parent.joinpath('sql')
 # Table Names
@@ -83,6 +92,11 @@ class UserRole(IntEnum):
 #                     config.logging)
 
 
+def set_level_sqlalchemy_loggers(level: str):
+    for sa_logger in sa_loggers:
+        sa_logger.setLevel(level)
+
+
 def load_db_engine(testing_engine: Engine = None):
     """TODO: Docstring
 
@@ -112,11 +126,13 @@ def load_db_tables():
     :returns: TODO
     """
     global _tables
+    set_level_sqlalchemy_loggers("WARN")
     _tables = {
         table_name: Table(table_name, metadata_obj,
                           autoload_with=get_db_engine())
         for table_name in TABLES_LAYERED_DEPENDANCY_ORDER
     }
+    set_level_sqlalchemy_loggers("DEBUG")
     # for table_name in TABLES_LAYERED_DEPENDANCY_ORDER.keys():
     #     table = Table(table_name, metadata_obj, autoload_with=get_db_engine())
     #     setattr(Tables, table_name, table)
