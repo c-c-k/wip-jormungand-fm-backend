@@ -169,7 +169,7 @@ def data_in_table(
         for entry in data:
             stmt = select(table).filter_by(**entry)
             result = conn.execute(stmt).all()
-            assert len(result) == 1
+            assert len(result) == 1, f"entry not in {table.name}: {entry}"
 
 
 def dataset_in_db(engine_: Engine, dataset: dict):

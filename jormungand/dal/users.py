@@ -3,7 +3,6 @@ TODO: dal.user module docstring
 """
 
 from sqlalchemy import select, insert
-from sqlalchemy.exc import IntegrityError
 
 from jormungand.core import db
 from jormungand.core.exceptions import (
@@ -38,33 +37,14 @@ def get_all():
             raise DataNotFoundError(f'no user with id {id_} in database')
  
 
-def add_one(data):
+def add_one(data: dict):
     """Adds one user"""
     with db.get_db_connection() as conn:
         table = db.get_table_by_name(db.TN_USERS)
         stmt = insert(table).values(data).returning(table)
-        # raise Exception(str(stmt))
-        try:
-            result = conn.execute(stmt, data).mappings().one()
-        except IntegrityError as error:
-            if 'unique' in str(error):
-                with db.get_db_connection() as conn:
-                    stmt = (
-                            select(table)
-                            .where(table.c.username == data['username'])
-                    )
-                    result = conn.execute(stmt, data).mappings().one()
-            else:
-                raise InvalidDataError(str(error))
+        result = conn.execute(stmt, data).mappings().one()
         return dict(result)
-        # stmt = select(table)
-        # for table_name in used_table_names:
-        #     table = db.get_table_by_name(table_name)
-        # conn.execute(text("""
-        # INSERT INTO users
-        #     ( id, user_role, username, password, email, avatar_url )
-        # VALUES
-        #     ( :id, :user_role, :username, :password, :email, :avatar_url )
-        # """), new_users)
  
 
+def add_many(data: list[dict]):
+    pass

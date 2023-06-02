@@ -3,6 +3,10 @@
 """
 
 
+class DuplicateDataError(Exception):
+    pass
+
+
 class InvalidDataError(Exception):
     pass
 
