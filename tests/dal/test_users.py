@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from jormungand.core import db
 from jormungand.core.exceptions import DataNotFoundError
 from jormungand.dal import users
-from tests.utils import db_load_dataset, data_in_table
+from tests.utils.data import db_load_dataset, data_in_table
 
 DATASET_2_USERS = {
     "users": {

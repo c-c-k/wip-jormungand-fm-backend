@@ -4,7 +4,7 @@ import pytest
 from sqlalchemy import Engine, text, select
 
 from jormungand.core import db
-from tests.utils import db_load_dataset, dataset_in_db
+from tests.utils.data import db_load_dataset, dataset_in_db
 
 DATASET_TEST_SETUP_DATASET = {
     'airline_companies': {
