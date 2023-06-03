@@ -95,17 +95,24 @@ DATASET_TEMPLATE = {
 }
 
 
-def _copy_dataset(dataset: dict, remove_ids: bool = True) -> dict:
+def _copy_dataset(dataset: dict, remove_apk: bool = True) -> dict:
     _dataset = deepcopy(dataset)
-    if remove_ids:
-        for table in _dataset.values():
-            for entry in table.values():
-                entry.pop("id", None)
+    if remove_apk:
+        for table_name, table_entries in _dataset.items():
+            table = db.get_table(table_name)
+            for column in table.columns:
+                if column.primary_key and column.autoincrement:
+                    apk_column = column.name
+                    break
+            else:
+                apk_column = None
+            for entry in table_entries.values():
+                entry.pop(apk_column, None)
     return _dataset
 
 
 def db_load_dataset(
-        engine_: Engine, dataset: dict, *, remove_ids: bool = True,
+        engine_: Engine, dataset: dict, *, remove_apk: bool = True,
         load_to_db: bool = True, return_copy: bool = True
         ) -> dict | None:
     """Load a test dataset into a temporary testing database
@@ -120,7 +127,7 @@ def db_load_dataset(
             that were already created by the test/program code and thus
             resulting in IntegrityErrors on the id field.
     """
-    dataset = _copy_dataset(dataset, remove_ids)
+    dataset = _copy_dataset(dataset, remove_apk)
     if not load_to_db:
         return dataset
     used_table_names = sorted(

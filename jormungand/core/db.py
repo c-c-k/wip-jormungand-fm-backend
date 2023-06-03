@@ -9,7 +9,7 @@ import itertools
 from pathlib import Path
 
 from sqlalchemy import (
-    create_engine, Engine, MetaData, Table, text, Connection)
+    create_engine, Engine, Connection, MetaData, Table, text, insert)
 from sqlalchemy.engine import URL
 
 from .config import config
@@ -226,15 +226,25 @@ def init_db():
 
     # TODO: existing db handling
     schema = text(_SQL_DIR.joinpath('./schema.sql').read_text())
-    stored_procedures = text(
-            _SQL_DIR.joinpath('./stored_procedures.sql').read_text())
-    with get_db_connection() as conn:
+    # TODO: Adjust stored procedures to per table id names
+    # stored_procedures = text(
+    #         _SQL_DIR.joinpath('./stored_procedures.sql').read_text())
+    with get_db_connection(begin_once=False) as conn:
         conn.execute(schema)
-        conn.execute(stored_procedures)
-        conn.execute(text("""
-        INSERT INTO user_roles (id, role_name) VALUES (:id, :rolename);
-        """), [
-            {'id': int(user_role), 'rolename': user_role.name} 
-            for user_role in UserRole]
-        )
+        # TODO: Adjust stored procedures to per table id names
+        # conn.execute(stored_procedures)
+        conn.commit()
+        # conn.execute(text("""
+        # INSERT INTO user_roles (user_role_id, role_name) VALUES (:id, :rolename);
+        # """), [
+            # {'id': int(user_role), 'rolename': user_role.name} 
+            # for user_role in UserRole]
+        # )
+        table = get_table(TN_USER_ROLES)
+        data = [
+            {'user_role_id': int(user_role), 'role_name': user_role.name}
+            for user_role in UserRole
+            ]
+        conn.execute(insert(table), data)
+        conn.commit()
  

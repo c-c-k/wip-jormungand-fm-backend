@@ -12,19 +12,19 @@ from jormungand.core.logging import get_logger
 
 logger = get_logger(__name__)
 
-# COLUMNS_LIST = ['id', 'user'_'role', 'username', 'password', 'email',
+# COLUMNS_LIST = ['user_id', 'user_role_id', 'username', 'password', 'email',
 #         'avatar'_'url']
 
 
-def get_by_id(id_):
+def get_by_id(user_id):
     with db.get_db_connection() as conn:
         table = db.get_table(db.TN_USERS)
-        stmt = select(table).where(table.c.id == id_)
+        stmt = select(table).where(table.c.user_id == user_id)
         result = conn.execute(stmt).mappings().one_or_none()
         try:
             return dict(result)
         except TypeError:
-            raise DataNotFoundError(f"no user with id {id_} in database")
+            raise DataNotFoundError(f"no user with id {user_id} in database")
 
 
 def get_all():
@@ -72,20 +72,21 @@ def add_many(data: list[dict]) -> list[dict]:
 def update(data: dict) -> dict:
     table = db.get_table(db.TN_USERS)
     with db.get_db_connection() as conn:
-        stmt = (sa_update(table).where(table.c.id == data["id"]).values(data)
-                .returning(table))
+        stmt = (sa_update(table).where(table.c.user_id == data["user_id"])
+                .values(data).returning(table))
         try:
             result = conn.execute(stmt).mappings().one()
         except NoResultFound:
             raise DataNotFoundError(
-                    f"no user with id {data['id']} in database")
+                    f"no user with id {data['user_id']} in database")
         return dict(result)
 
 
 def delete(user_id: int):
     table = db.get_table(db.TN_USERS)
     with db.get_db_connection() as conn:
-        stmt = sa_delete(table).where(table.c.id == user_id).returning(table)
+        stmt = (sa_delete(table).where(table.c.user_id == user_id)
+                .returning(table))
         try:
             result = conn.execute(stmt).mappings().one()
         except NoResultFound:
