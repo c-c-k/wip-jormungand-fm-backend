@@ -146,7 +146,9 @@ def get_data_from_dataset(
 
 
 def data_in_table(
-        engine_: Engine, data: list[dict] | dict, table: str | Table):
+        engine_: Engine, data: list[dict] | dict, table: str | Table,
+        reverse: bool = False
+        ):
     table = db.get_table(table)
     if isinstance(data, dict):
         data = [data]
@@ -154,7 +156,10 @@ def data_in_table(
         for entry in data:
             stmt = select(table).filter_by(**entry)
             result = conn.execute(stmt).all()
-            assert len(result) == 1, f"entry not in {table.name}: {entry}"
+            if reverse:
+                assert len(result) == 0, f"entry in {table.name}: {entry}"
+            else:
+                assert len(result) == 1, f"entry not in {table.name}: {entry}"
 
 
 def dataset_in_db(engine_: Engine, dataset: dict):

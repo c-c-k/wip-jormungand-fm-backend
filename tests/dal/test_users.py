@@ -1,8 +1,6 @@
-from copy import deepcopy
 from operator import itemgetter
 
 import pytest
-from sqlalchemy import insert
 from sqlalchemy.exc import IntegrityError
 
 from jormungand.core import db
@@ -76,10 +74,10 @@ class TestGet:
         prog_data = users.get_by_id(expected_data["id"])
         assert prog_data == expected_data
 
-    def test_get_non_existing_user_by_id_raises_exception(self, tmp_db):
-        with pytest.raises(DataNotFoundError) as excinfo:
-            users.get_by_id(-1)
-            assert "-1" in str(excinfo.value)
+    def test_get_non_existing_user_by_id_raises_data_not_found_error(self, tmp_db):
+        with pytest.raises(
+                DataNotFoundError, match=r".*id.*-9999.*"):
+            users.get_by_id(-9999)
 
     def test_get_all_users_returns_all_users_data_as_list(self, tmp_db):
         dataset = db_load_dataset(tmp_db, DATASET_2_USERS, remove_ids=False)
@@ -198,7 +196,6 @@ class TestAddMany:
         assert prog_data == []
 
 
-@pytest.mark.current
 class TestUpdate:
     def test_update_user_updates_user(self, tmp_db):
         dataset = db_load_dataset(tmp_db, DATASET_1_USERS, remove_ids=False)
@@ -216,7 +213,7 @@ class TestUpdate:
         prog_data = users.update(input_data)
         assert prog_data == input_data
 
-    def test_update_non_existing_user_raises_exception(self, tmp_db):
+    def test_update_non_existing_user_raises_data_not_found_error(self, tmp_db):
         dataset = db_load_dataset(tmp_db, DATASET_1_USERS, remove_ids=False,
                                   load_to_db=False)
         table = db.get_table(db.TN_USERS)
@@ -225,7 +222,7 @@ class TestUpdate:
                 DataNotFoundError, match=rf".*id.*{input_data['id']}"):
             users.update(input_data)
 
-    def test_update_user_with_invalid_data_raises_exception(self, tmp_db):
+    def test_update_user_with_invalid_data_raises_integrity_error(self, tmp_db):
         dataset = db_load_dataset(tmp_db, DATASET_1_USERS, remove_ids=False)
         table = db.get_table(db.TN_USERS)
         input_data = get_data_from_dataset(dataset, table)["user_1"]
@@ -235,17 +232,23 @@ class TestUpdate:
         assert "username" in str(excinfo.value)
 
 
-@pytest.mark.skip("TODO: test")
+@pytest.mark.current
 class TestDelete:
-    @pytest.mark.skip("TODO: test")
     def test_delete_user_deletes_user(self, tmp_db):
-        pass
+        dataset = db_load_dataset(tmp_db, DATASET_1_USERS, remove_ids=False)
+        table = db.get_table(db.TN_USERS)
+        input_data = get_data_from_dataset(dataset, table)["user_1"]
+        users.delete(input_data["id"])
+        data_in_table(tmp_db, input_data, table, reverse=True)
 
-    @pytest.mark.skip("TODO: test")
-    def test_delete_user_returns_none(self, tmp_db):
-        pass
+    def test_delete_user_returns_deleted_user_data(self, tmp_db):
+        dataset = db_load_dataset(tmp_db, DATASET_1_USERS, remove_ids=False)
+        table = db.get_table(db.TN_USERS)
+        input_data = get_data_from_dataset(dataset, table)["user_1"]
+        prog_data = users.delete(input_data["id"])
+        assert prog_data == input_data
 
-    @pytest.mark.skip("TODO: test")
-    def test_delete_non_existing_user_raises_exception(self, tmp_db):
-        pass
-
+    def test_delete_non_existing_user_raises_data_not_found_error(self, tmp_db):
+        with pytest.raises(
+                DataNotFoundError, match=r".*id.*-9999.*"):
+            users.delete(-9999)

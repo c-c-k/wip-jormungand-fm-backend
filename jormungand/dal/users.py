@@ -2,9 +2,8 @@
 TODO: dal.user module docstring
 """
 
-from warnings import warn
-
-from sqlalchemy import select, insert, update as sa_update
+from sqlalchemy import (
+        select, insert, update as sa_update, delete as sa_delete)
 from sqlalchemy.exc import NoResultFound
 
 from jormungand.core import db
@@ -82,3 +81,14 @@ def update(data: dict) -> dict:
                     f"no user with id {data['id']} in database")
         return dict(result)
 
+
+def delete(user_id: int):
+    table = db.get_table(db.TN_USERS)
+    with db.get_db_connection() as conn:
+        stmt = sa_delete(table).where(table.c.id == user_id).returning(table)
+        try:
+            result = conn.execute(stmt).mappings().one()
+        except NoResultFound:
+            raise DataNotFoundError(
+                    f"no user with id {user_id} in database")
+        return dict(result)
