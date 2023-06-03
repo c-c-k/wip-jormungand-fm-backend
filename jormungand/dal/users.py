@@ -18,7 +18,7 @@ logger = get_logger(__name__)
 
 def get_by_id(id_):
     with db.get_db_connection() as conn:
-        table = db.get_table_by_name(db.TN_USERS)
+        table = db.get_table(db.TN_USERS)
         stmt = select(table).where(table.c.id == id_)
         result = conn.execute(stmt).mappings().one_or_none()
         try:
@@ -29,7 +29,7 @@ def get_by_id(id_):
 
 def get_all():
     with db.get_db_connection() as conn:
-        table = db.get_table_by_name(db.TN_USERS)
+        table = db.get_table(db.TN_USERS)
         stmt = select(table)
         result = conn.execute(stmt).mappings().all()
         try:
@@ -40,7 +40,7 @@ def get_all():
 
 def add_one(data: dict) -> dict:
     """Adds one user"""
-    table = db.get_table_by_name(db.TN_USERS)
+    table = db.get_table(db.TN_USERS)
     with db.get_db_connection() as conn:
         stmt = insert(table).values(data).returning(table)
         result = conn.execute(stmt, data).mappings().one()
@@ -49,7 +49,7 @@ def add_one(data: dict) -> dict:
 
 def add_many(data: list[dict]) -> list[dict]:
     input_user_names = [entry["username"] for entry in data]
-    table = db.get_table_by_name(db.TN_USERS)
+    table = db.get_table(db.TN_USERS)
     with db.get_db_connection() as conn:
         stmt = (
                 select(table.c.username)

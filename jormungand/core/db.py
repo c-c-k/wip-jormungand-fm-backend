@@ -140,14 +140,18 @@ def load_db_tables():
     # setattr(Tables, 't_names_sort_key', table_names_sort_key)
 
 
-def get_table_by_name(table_name: str) -> Table:
+def get_table(table: str | Table) -> Table:
     """TODO: Docstring for _init_tables.
 
     :returns: TODO
     """
     if _tables is None:
         load_db_tables()
-    return _tables[table_name]
+    if isinstance(table, str):
+        _table = _tables[table]
+    else:
+        _table = table
+    return _table
 
 
 def table_name_sort_key(table_name):
@@ -165,8 +169,7 @@ def get_colum_names(table: str | Table) -> list[str]:
 
     :returns: TODO
     """
-    if isinstance(table, str):
-        table = get_table_by_name(table)
+    table = get_table(table)
     return tuple(column.name for column in table.columns)
 
 

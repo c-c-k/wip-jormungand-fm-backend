@@ -57,7 +57,7 @@ def test_engine_uses_psycopg2(tmp_db):
 
 def test_init_db_init_roles(tmp_db):
     with tmp_db.begin() as conn:
-        table = db.get_table_by_name(db.TN_USER_ROLES)
+        table = db.get_table(db.TN_USER_ROLES)
         db_user_roles = conn.execute(select(table)).all()
         assert len(db_user_roles) == len(db.UserRole)
         for role_id, role_name in db_user_roles:
@@ -69,7 +69,7 @@ def test_dataset_testing_helper_utils(tmp_db):
     db_load_dataset(tmp_db, dataset)
     dataset_in_db(tmp_db, dataset)
     with tmp_db.begin() as conn:
-        table = db.get_table_by_name(db.TN_USERS)
+        table = db.get_table(db.TN_USERS)
         entry = deepcopy(dataset[table.name]['user'])
         entry['username'] = 'wrong name'
         stmt = select(table).filter_by(**entry)

@@ -149,7 +149,7 @@ def db_load_dataset(engine_: Engine, dataset: dict):
             key=db.table_name_sort_key)
     with engine_.begin() as conn:
         for table_name in used_table_names:
-            table = db.get_table_by_name(table_name)
+            table = db.get_table(table_name)
             for entry in dataset[table_name].values():
                 stmt = insert(table).values(entry).returning(table)
                 result = conn.execute(stmt).mappings().one()
@@ -160,7 +160,7 @@ def db_load_dataset(engine_: Engine, dataset: dict):
 def data_in_table(
         engine_: Engine, data: list[dict] | dict, table: str | Table):
     if isinstance(table, str):
-        table = db.get_table_by_name(table)
+        table = db.get_table(table)
     if isinstance(data, dict):
         data = [data]
     with engine_.begin() as conn:
