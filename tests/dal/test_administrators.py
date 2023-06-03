@@ -12,7 +12,7 @@ from tests.utils.data import (
 DATASET_1_ADMINISTRATORS = {
     "users": {
         "user_1": {
-            "id": 1,
+            "user_id": 1,
             "user_role_id": int(db.UserRole.CUSTOMER),
             "username": "user_1",
             "password": "pass",
@@ -22,7 +22,7 @@ DATASET_1_ADMINISTRATORS = {
     },
     "administrators": {
         "user_1": {
-            "id": 1,
+            "administrator_id": 1,
             "user_id": 1,
             "first_name": "first_name_1",
             "last_name": "last_name_1",
@@ -32,7 +32,7 @@ DATASET_1_ADMINISTRATORS = {
 DATASET_2_ADMINISTRATORS = {
     "users": {
         "user_1": {
-            "id": 2,
+            "user_id": 1,
             "user_role_id": int(db.UserRole.CUSTOMER),
             "username": "user_1",
             "password": "pass",
@@ -40,6 +40,7 @@ DATASET_2_ADMINISTRATORS = {
             "avatar_url": "user_1.png",
         },
         "user_2": {
+            "user_id": 2,
             "user_role_id": int(db.UserRole.CUSTOMER),
             "username": "user_2",
             "password": "pass",

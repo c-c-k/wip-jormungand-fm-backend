@@ -111,9 +111,18 @@ def _copy_dataset(dataset: dict, remove_apk: bool = True) -> dict:
     return _dataset
 
 
+def _add_full_user_data(
+        # TODO: finish add full user data, then use it for the admin tests.
+        dataset: dict, merge_name: str, merge_tables: list[str | Table]
+        ):
+    merge_tables = [db.get_table(table, name_only=True) for table in merge
+
+
+
 def db_load_dataset(
         engine_: Engine, dataset: dict, *, remove_apk: bool = True,
-        load_to_db: bool = True, return_copy: bool = True
+        load_to_db: bool = True, return_copy: bool = True,
+        add_merge: tuple[str, list[str | Table]] = None
         ) -> dict | None:
     """Load a test dataset into a temporary testing database
 
