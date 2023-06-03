@@ -4,7 +4,8 @@ TODO: dal.user module docstring
 
 from warnings import warn
 
-from sqlalchemy import select, insert
+from sqlalchemy import select, insert, update as sa_update
+from sqlalchemy.exc import NoResultFound
 
 from jormungand.core import db
 from jormungand.core.exceptions import DataNotFoundError
@@ -67,3 +68,17 @@ def add_many(data: list[dict]) -> list[dict]:
             result = conn.execute(stmt).mappings().all()
             new_users_data = [dict(row) for row in result]
         return new_users_data
+
+
+def update(data: dict) -> dict:
+    table = db.get_table(db.TN_USERS)
+    with db.get_db_connection() as conn:
+        stmt = (sa_update(table).where(table.c.id == data["id"]).values(data)
+                .returning(table))
+        try:
+            result = conn.execute(stmt).mappings().one()
+        except NoResultFound:
+            raise DataNotFoundError(
+                    f"no user with id {data['id']} in database")
+        return dict(result)
+

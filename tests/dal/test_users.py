@@ -14,6 +14,7 @@ from tests.utils.data import (
 DATASET_1_USERS = {
     "users": {
         "user_1": {
+            "id": 1,
             "user_role": int(db.UserRole.CUSTOMER),
             "username": "user_1",
             "password": "pass",
@@ -25,6 +26,7 @@ DATASET_1_USERS = {
 DATASET_2_USERS = {
     "users": {
         "user_1": {
+            "id": 2,
             "user_role": int(db.UserRole.CUSTOMER),
             "username": "user_1",
             "password": "pass",
@@ -198,29 +200,39 @@ class TestAddMany:
 
 @pytest.mark.current
 class TestUpdate:
-    @pytest.mark.skip("TODO: test")
     def test_update_user_updates_user(self, tmp_db):
-        dataset = get_dataset_2_user()
-        data = get_data_2_users()
-        # MEMO: make get data from dataset helper
+        dataset = db_load_dataset(tmp_db, DATASET_1_USERS, remove_ids=False)
         table = db.get_table(db.TN_USERS)
-        db_load_dataset(tmp_db, dataset)
-        data["user_1"]
-        users.add_many(data.values())
-        data_in_table(tmp_db, data.values(), table)
-        pass
+        input_data = get_data_from_dataset(dataset, table)["user_1"]
+        input_data["email"] = "email-changed@email.com"
+        users.update(input_data)
+        data_in_table(tmp_db, input_data, table)
 
-    @pytest.mark.skip("TODO: test")
     def test_update_user_returns_updated_user_data(self, tmp_db):
-        pass
+        dataset = db_load_dataset(tmp_db, DATASET_1_USERS, remove_ids=False)
+        table = db.get_table(db.TN_USERS)
+        input_data = get_data_from_dataset(dataset, table)["user_1"]
+        input_data["email"] = "email-changed@email.com"
+        prog_data = users.update(input_data)
+        assert prog_data == input_data
 
-    @pytest.mark.skip("TODO: test")
     def test_update_non_existing_user_raises_exception(self, tmp_db):
-        pass
+        dataset = db_load_dataset(tmp_db, DATASET_1_USERS, remove_ids=False,
+                                  load_to_db=False)
+        table = db.get_table(db.TN_USERS)
+        input_data = get_data_from_dataset(dataset, table)["user_1"]
+        with pytest.raises(
+                DataNotFoundError, match=rf".*id.*{input_data['id']}"):
+            users.update(input_data)
 
-    @pytest.mark.skip("TODO: test")
     def test_update_user_with_invalid_data_raises_exception(self, tmp_db):
-        pass
+        dataset = db_load_dataset(tmp_db, DATASET_1_USERS, remove_ids=False)
+        table = db.get_table(db.TN_USERS)
+        input_data = get_data_from_dataset(dataset, table)["user_1"]
+        input_data["username"] = None
+        with pytest.raises(IntegrityError) as excinfo:
+            users.update(input_data)
+        assert "username" in str(excinfo.value)
 
 
 @pytest.mark.skip("TODO: test")
