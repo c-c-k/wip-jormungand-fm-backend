@@ -16,7 +16,7 @@ logger = getLogger(__name__)
 DATASET_TEMPLATE = {
     'users': {
         'customer_user_1': {
-            'id': 51,
+            'user_id': 51,
             'user_role': int(db.UserRole.CUSTOMER),
             'username': 'customer_user_1',
             'password': 'pass',
@@ -24,7 +24,7 @@ DATASET_TEMPLATE = {
             'avatar_url': 'user_avatars/customer_user_1.png',
         },
         'airline_user_1': {
-            'id': 61,
+            'user_id': 61,
             'user_role': int(db.UserRole.AIRLINE_COMPANY),
             'username': 'airline_user_1',
             'password': 'pass',
@@ -32,7 +32,7 @@ DATASET_TEMPLATE = {
             'avatar_url': 'user_avatars/airline_user_1.png',
         },
         'admin_user_1': {
-            'id': 71,
+            'user_id': 71,
             'user_role': int(db.UserRole.ADMINISTRATOR),
             'username': 'admin_user_1',
             'password': 'pass',
@@ -42,22 +42,20 @@ DATASET_TEMPLATE = {
     },
     'countries': {
         'country_1': {
-            'id': 61,
+            'country_id': 61,
             'name': 'country_1',
             'flag_url': 'country_1.png',
         },
     },
     'airline_companies': {
         'airline_company_1': {
-            'id': 61,
-            'country_id': 61,
             'user_id': 61,
+            'country_id': 61,
             'name': 'airline_company_1',
         },
     },
     'customers': {
         'customer_1': {
-            'id': 51,
             'user_id': 51,
             'first_name': 'customer_1_first_name',
             'last_name': 'customer_1_last_name',
@@ -68,7 +66,6 @@ DATASET_TEMPLATE = {
     },
     'administrators': {
         'administrator_1': {
-            'id': 71,
             'user_id': 71,
             'first_name': 'administrator_1_first_name',
             'last_name': 'administrator_1_last_name',
@@ -76,7 +73,7 @@ DATASET_TEMPLATE = {
     },
     'flights': {
         'flight_template_dt_now': {
-            'id': 1,
+            'flight_id': 1,
             'airline_company_id': 61,
             'origin_country_id': 81,
             'destination_country_id': 881,
@@ -87,7 +84,7 @@ DATASET_TEMPLATE = {
     },
     'tickets': {
         'ticket_template': {
-            'id': 1,
+            'ticket_id': 1,
             'flight_id': 1,
             'customer_id': 51,
         },
@@ -111,11 +108,11 @@ def _copy_dataset(dataset: dict, remove_apk: bool = True) -> dict:
     return _dataset
 
 
-def _add_full_user_data(
-        # TODO: finish add full user data, then use it for the admin tests.
-        dataset: dict, merge_name: str, merge_tables: list[str | Table]
-        ):
-    merge_tables = [db.get_table(table, name_only=True) for table in merge
+# def _add_full_user_data(
+#         # TODO: finish add full user data, then use it for the admin tests.
+#         dataset: dict, merge_name: str, merge_tables: list[str | Table]
+#         ):
+#     merge_tables = [db.get_table(table, name_only=True) for table in merge
 
 
 

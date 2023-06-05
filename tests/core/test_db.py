@@ -9,9 +9,8 @@ from tests.utils.data import db_load_dataset, dataset_in_db
 DATASET_TEST_SETUP_DATASET = {
     'airline_companies': {
         'airline_company': {
-            'airline_company_id': 1,
-            'country_id': 1,
             'user_id': 1,
+            'country_id': 1,
             'name': 'airline_company',
         },
     },
