@@ -12,9 +12,6 @@ from jormungand.core.logging import get_logger
 
 logger = get_logger(__name__)
 
-# COLUMNS_LIST = ['user_id', 'user_role_id', 'username', 'password', 'email',
-#         'avatar'_'url']
-
 
 def get_by_id(user_id):
     with db.get_db_connection() as conn:

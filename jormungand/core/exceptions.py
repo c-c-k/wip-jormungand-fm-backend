@@ -3,7 +3,7 @@
 """
 
 
-class DuplicateDataError(Exception):
+class DuplicateKeyError(Exception):
     pass
 
 

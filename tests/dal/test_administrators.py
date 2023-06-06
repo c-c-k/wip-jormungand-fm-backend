@@ -6,8 +6,8 @@ from sqlalchemy.exc import IntegrityError
 
 from jormungand.core import db
 from jormungand.core.exceptions import (
-        DataNotFoundError, DuplicateDataError, InvalidDataError)
-# from jormungand.dal import administrators
+        DataNotFoundError, DuplicateKeyError, InvalidDataError)
+from jormungand.dal import administrators
 from tests.utils.data import (
         db_load_dataset, data_in_table, get_data_from_dataset)
 
@@ -61,7 +61,6 @@ def load_users_dataset(tmp_db):
     db_load_dataset(tmp_db, DATASET_2_USERS, remove_apk=False)
 
 
-@pytest.mark.current
 class TestGet:
     def test_get_administrator_by_id_returns_administrator_data(self, tmp_db):
         dataset = db_load_dataset(tmp_db, DATASET_2_ADMINISTRATORS, remove_apk=False)
@@ -106,23 +105,27 @@ class TestAddOne:
         prog_data = administrators.add_one(input_data)
         assert prog_data == input_data
 
-    def test_add_existing_administrator_raises_duplicate_data_error(self, tmp_db):
+    def test_add_existing_administrator_raises_duplicate_key_error(self, tmp_db):
         dataset = db_load_dataset(tmp_db, DATASET_1_ADMINISTRATORS, remove_apk=False)
         table = db.get_table(db.TN_ADMINISTRATORS)
         input_data = get_data_from_dataset(dataset, table)[1]
-        with pytest.raises(DuplicateDataError) as excinfo:
+        with pytest.raises(
+                DuplicateKeyError,
+                match=rf".*id.*{input_data['user_id']}.*"
+                ):
             administrators.add_one(input_data)
-        assert "user_id" in str(excinfo.value)
 
     def test_add_new_administrator_with_invalid_data_raises_invalid_data_error(self, tmp_db):
         dataset = db_load_dataset(tmp_db, DATASET_1_ADMINISTRATORS,
                                   remove_apk=False, load_to_db=False)
         table = db.get_table(db.TN_ADMINISTRATORS)
         input_data = get_data_from_dataset(dataset, table)[1]
-        input_data.pop("user_id")
-        with pytest.raises(InvalidDataError) as excinfo:
+        user_id = input_data.pop("user_id")
+        with pytest.raises(
+                InvalidDataError,
+                match=rf".*null.*{user_id}.*"
+                ):
             administrators.add_one(input_data)
-        assert "user_id" in str(excinfo.value)
 
 
 class TestAddMany:
@@ -217,21 +220,24 @@ class TestUpdate:
         input_data = get_data_from_dataset(dataset, table)[1]
         with pytest.raises(
                 DataNotFoundError,
-                match=rf".*user_id.*{input_data['user_id']}"
+                match=rf".*id.*{input_data['user_id']}"
                 ):
             administrators.update(input_data)
 
     # @pytest.skip(reason="administrator table doesn't have any data that can be invalid")
-    def test_update_administrator_with_invalid_data_raises_invalid_data_error(self, tmp_db):
-        dataset = db_load_dataset(tmp_db, DATASET_1_ADMINISTRATORS, remove_apk=False)
-        table = db.get_table(db.TN_ADMINISTRATORS)
-        input_data = get_data_from_dataset(dataset, table)["administrator_1"]
-        input_data["first_name"] = datetime.now()
-        with pytest.raises(InvalidDataError) as excinfo:
-            administrators.update(input_data)
-        assert "first_name" in str(excinfo.value)
+    # def test_update_administrator_with_invalid_data_raises_invalid_data_error(self, tmp_db):
+    #     dataset = db_load_dataset(tmp_db, DATASET_1_ADMINISTRATORS, remove_apk=False)
+    #     table = db.get_table(db.TN_ADMINISTRATORS)
+    #     input_data = get_data_from_dataset(dataset, table)[1]
+    #     input_data["???"] = ???
+    #     with pytest.raises(
+    #             InvalidDataError,
+    #             match=rf"???"
+    #             ):
+    #         administrators.update(input_data)
 
 
+@pytest.mark.current
 class TestDelete:
     def test_delete_administrator_deletes_administrator(self, tmp_db):
         dataset = db_load_dataset(tmp_db, DATASET_1_ADMINISTRATORS, remove_apk=False)

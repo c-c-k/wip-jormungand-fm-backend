@@ -34,6 +34,7 @@ filterwarnings = [
     'ignore:.*pkg_resources.declare_namespace.*:DeprecationWarning',
     'ignore:.*pkg_resources is deprecated as an API.*:DeprecationWarning',
     'ignore:.*mark\.current.*',
+    'ignore:.*no.*default generator.*',
 ]
 
 [tool.coverage.run]
