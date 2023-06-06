@@ -97,7 +97,6 @@ class TestAddOne:
                 ):
             users.add_one(input_data)
 
-    @pytest.mark.current
     def test_add_new_user_with_invalid_data_raises_invalid_data_error(self, tmp_db):
         dataset = db_load_dataset(tmp_db, DATASET_1_USERS, load_to_db=False)
         table = db.get_table(db.TN_USERS)
