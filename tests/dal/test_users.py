@@ -4,7 +4,8 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 
 from jormungand.core import db
-from jormungand.core.exceptions import DataNotFoundError
+from jormungand.core.exceptions import (
+        DataNotFoundError, DuplicateKeyError, InvalidDataError)
 from jormungand.dal import users
 from tests.utils.data import (
         db_load_dataset, data_in_table, get_data_from_dataset)
@@ -86,22 +87,24 @@ class TestAddOne:
         assert prog_data.pop("user_id", None) is not None
         assert prog_data == input_data
 
-    def test_add_existing_user_raises_integrity_error(self, tmp_db):
+    def test_add_existing_user_raises_duplicate_key_error(self, tmp_db):
         dataset = db_load_dataset(tmp_db, DATASET_1_USERS)
         table = db.get_table(db.TN_USERS)
         input_data = get_data_from_dataset(dataset, table)["user_1"]
-        with pytest.raises(IntegrityError) as excinfo:
+        with pytest.raises(
+                DuplicateKeyError,
+                match=rf".*username.*{input_data['username']}.*"
+                ):
             users.add_one(input_data)
-        assert "username" in str(excinfo.value)
 
-    def test_add_new_user_with_invalid_data_raises_integrity_error(self, tmp_db):
+    @pytest.mark.current
+    def test_add_new_user_with_invalid_data_raises_invalid_data_error(self, tmp_db):
         dataset = db_load_dataset(tmp_db, DATASET_1_USERS, load_to_db=False)
         table = db.get_table(db.TN_USERS)
         input_data = get_data_from_dataset(dataset, table)["user_1"]
-        input_data.pop("username")
-        with pytest.raises(IntegrityError) as excinfo:
+        input_data["user_id"] = "invalid value"
+        with pytest.raises(InvalidDataError):
             users.add_one(input_data)
-        assert "username" in str(excinfo.value)
 
 
 class TestAddMany:
@@ -196,17 +199,18 @@ class TestUpdate:
         table = db.get_table(db.TN_USERS)
         input_data = get_data_from_dataset(dataset, table)["user_1"]
         with pytest.raises(
-                DataNotFoundError, match=rf".*id.*{input_data['user_id']}"):
+                DataNotFoundError,
+                match=rf".*id.*{input_data['user_id']}"
+                ):
             users.update(input_data)
 
-    def test_update_user_with_invalid_data_raises_integrity_error(self, tmp_db):
+    def test_update_user_with_invalid_data_raises_invalid_data_error(self, tmp_db):
         dataset = db_load_dataset(tmp_db, DATASET_1_USERS, remove_apk=False)
         table = db.get_table(db.TN_USERS)
         input_data = get_data_from_dataset(dataset, table)["user_1"]
         input_data["username"] = None
-        with pytest.raises(IntegrityError) as excinfo:
+        with pytest.raises(InvalidDataError):
             users.update(input_data)
-        assert "username" in str(excinfo.value)
 
 
 class TestDelete:

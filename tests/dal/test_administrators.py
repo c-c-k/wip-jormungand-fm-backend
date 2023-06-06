@@ -1,8 +1,6 @@
-from datetime import datetime
 from operator import itemgetter
 
 import pytest
-from sqlalchemy.exc import IntegrityError
 
 from jormungand.core import db
 from jormungand.core.exceptions import (
@@ -120,11 +118,8 @@ class TestAddOne:
                                   remove_apk=False, load_to_db=False)
         table = db.get_table(db.TN_ADMINISTRATORS)
         input_data = get_data_from_dataset(dataset, table)[1]
-        user_id = input_data.pop("user_id")
-        with pytest.raises(
-                InvalidDataError,
-                match=rf".*null.*{user_id}.*"
-                ):
+        input_data["user_id"] = "invalid value"
+        with pytest.raises(InvalidDataError):
             administrators.add_one(input_data)
 
 
@@ -237,7 +232,6 @@ class TestUpdate:
     #         administrators.update(input_data)
 
 
-@pytest.mark.current
 class TestDelete:
     def test_delete_administrator_deletes_administrator(self, tmp_db):
         dataset = db_load_dataset(tmp_db, DATASET_1_ADMINISTRATORS, remove_apk=False)

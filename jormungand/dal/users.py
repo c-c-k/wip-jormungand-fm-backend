@@ -2,91 +2,35 @@
 TODO: dal.user module docstring
 """
 
-from sqlalchemy import (
-        select, insert, update as sa_update, delete as sa_delete)
-from sqlalchemy.exc import NoResultFound
-
+from . import base
 from jormungand.core import db
-from jormungand.core.exceptions import DataNotFoundError
 from jormungand.core.logging import get_logger
 
 logger = get_logger(__name__)
 
+TABLE_NAME = db.TN_USERS
+ID_C_NAME = "user_id"
 
-def get_by_id(user_id):
-    with db.get_db_connection() as conn:
-        table = db.get_table(db.TN_USERS)
-        stmt = select(table).where(table.c.user_id == user_id)
-        result = conn.execute(stmt).mappings().one_or_none()
-        try:
-            return dict(result)
-        except TypeError:
-            raise DataNotFoundError(f"no user with id {user_id} in database")
+
+def get_by_id(id_):
+    return base.get_by_id(TABLE_NAME, ID_C_NAME, id_)
 
 
 def get_all():
-    with db.get_db_connection() as conn:
-        table = db.get_table(db.TN_USERS)
-        stmt = select(table)
-        result = conn.execute(stmt).mappings().all()
-        try:
-            return list(dict(mapping) for mapping in result)
-        except TypeError:
-            raise DataNotFoundError("no users in database")
+    return base.get_all(TABLE_NAME)
 
 
 def add_one(data: dict) -> dict:
-    """Adds one user"""
-    table = db.get_table(db.TN_USERS)
-    with db.get_db_connection() as conn:
-        stmt = insert(table).values(data).returning(table)
-        result = conn.execute(stmt, data).mappings().one()
-        return dict(result)
+    return base.add_one(TABLE_NAME, "username", data)
 
 
 def add_many(data: list[dict]) -> list[dict]:
-    input_user_names = [entry["username"] for entry in data]
-    table = db.get_table(db.TN_USERS)
-    with db.get_db_connection() as conn:
-        stmt = (
-                select(table.c.username)
-                .where(table.c.username.in_(input_user_names))
-                )
-        result = conn.execute(stmt).all()
-        existing_usernames = set(row[0] for row in result)
-        new_usernames = set(input_user_names) - existing_usernames
-        new_users_data = [
-                entry for entry in data
-                if entry["username"] in new_usernames
-                ]
-        if new_users_data != []:
-            stmt = insert(table).values(new_users_data).returning(table)
-            result = conn.execute(stmt).mappings().all()
-            new_users_data = [dict(row) for row in result]
-        return new_users_data
+    return base.add_many(TABLE_NAME, "username", data)
 
 
 def update(data: dict) -> dict:
-    table = db.get_table(db.TN_USERS)
-    with db.get_db_connection() as conn:
-        stmt = (sa_update(table).where(table.c.user_id == data["user_id"])
-                .values(data).returning(table))
-        try:
-            result = conn.execute(stmt).mappings().one()
-        except NoResultFound:
-            raise DataNotFoundError(
-                    f"no user with id {data['user_id']} in database")
-        return dict(result)
+    return base.update(TABLE_NAME, ID_C_NAME, data)
 
 
-def delete(user_id: int):
-    table = db.get_table(db.TN_USERS)
-    with db.get_db_connection() as conn:
-        stmt = (sa_delete(table).where(table.c.user_id == user_id)
-                .returning(table))
-        try:
-            result = conn.execute(stmt).mappings().one()
-        except NoResultFound:
-            raise DataNotFoundError(
-                    f"no user with id {user_id} in database")
-        return dict(result)
+def delete(id_: int):
+    return base.delete(TABLE_NAME, ID_C_NAME, id_)
