@@ -3,7 +3,8 @@ TODO: dal.user module docstring
 """
 
 from sqlalchemy import (
-        Table, select, insert, update as sa_update, delete as sa_delete)
+        Connection, Table, select, insert,
+        update as sa_update, delete as sa_delete)
 from sqlalchemy.exc import NoResultFound, IntegrityError, DataError
 
 from jormungand.core import db
@@ -34,44 +35,89 @@ def get_all(table: str) -> list[dict]:
         return list(dict(mapping) for mapping in result)
 
 
+def _insert_one(
+        conn: Connection, table: Table, id_c_name: str, data: dict
+        ) -> dict:
+    stmt = insert(table).values(data).returning(table)
+    try:
+        result = conn.execute(stmt, data).mappings().one()
+    except (IntegrityError, DataError) as e:
+        raise e
+        if "duplicate key" in e.args[0]:
+            raise DuplicateKeyError(table_name=table.name,
+                                    column_name=id_c_name,
+                                    value=data[id_c_name])
+        else:
+            raise InvalidDataError(e.args[0])
+    return dict(result)
+
+
 def add_one(table: str | Table, id_c_name: str, data: dict) -> dict:
     table = db.get_table(table)
     with db.get_db_connection() as conn:
-        stmt = insert(table).values(data).returning(table)
-        try:
-            result = conn.execute(stmt, data).mappings().one()
-        except (IntegrityError, DataError) as e:
-            if "duplicate key" in e.args[0]:
-                raise DuplicateKeyError(table_name=table.name,
-                                        column_name=id_c_name,
-                                        value=data[id_c_name])
-            else:
-                raise InvalidDataError(e.args[0])
-        return dict(result)
+        return _insert_one(conn, table, id_c_name, data)
 
 
-def add_many(
+# def add_one(table: str | Table, id_c_name: str, data: dict) -> dict:
+#     table = db.get_table(table)
+#     with db.get_db_connection() as conn:
+#         stmt = insert(table).values(data).returning(table)
+#         try:
+#             result = conn.execute(stmt, data).mappings().one()
+#         except (IntegrityError, DataError) as e:
+#             if "duplicate key" in e.args[0]:
+#                 raise DuplicateKeyError(table_name=table.name,
+#                                         column_name=id_c_name,
+#                                         value=data[id_c_name])
+#             else:
+#                 raise InvalidDataError(e.args[0])
+#         return dict(result)
+
+
+def safe_add_many(
         table: str | Table, id_c_name: str, data: list[dict]
         ) -> list[dict]:
-    input_ids = [entry[id_c_name] for entry in data]
+    """"safely" adds multiple entries
+
+    new entries with valid data are added and returned
+    entries that already exist or that contain invalid data
+    are silently discarded
+    """
     table = db.get_table(table)
+    new_data = []
     with db.get_db_connection() as conn:
-        stmt = (
-                select(table.c[id_c_name])
-                .where(table.c[id_c_name].in_(input_ids))
-                )
-        result = conn.execute(stmt).all()
-        existing_ids = set(row[0] for row in result)
-        new_ids = set(input_ids) - existing_ids
-        new_data = [
-                entry for entry in data
-                if entry[id_c_name] in new_ids
-                ]
-        if new_data != []:
-            stmt = insert(table).values(new_data).returning(table)
-            result = conn.execute(stmt).mappings().all()
-            new_data = [dict(row) for row in result]
-        return new_data
+        for entry in data:
+            try:
+                inserted_data = _insert_one(conn, table, id_c_name, entry)
+            except (DuplicateKeyError, InvalidDataError):
+                continue
+            new_data.append(inserted_data)
+    return new_data
+
+
+# TODO: if/when needed
+# def bulk_add_many(
+#         table: str | Table, id_c_name: str, data: list[dict]
+#         ) -> list[dict]:
+#     input_ids = [entry[id_c_name] for entry in data]
+#     table = db.get_table(table)
+#     with db.get_db_connection() as conn:
+#         stmt = (
+#                 select(table.c[id_c_name])
+#                 .where(table.c[id_c_name].in_(input_ids))
+#                 )
+#         result = conn.execute(stmt).all()
+#         existing_ids = set(row[0] for row in result)
+#         new_ids = set(input_ids) - existing_ids
+#         new_data = [
+#                 entry for entry in data
+#                 if entry[id_c_name] in new_ids
+#                 ]
+#         if new_data != []:
+#             stmt = insert(table).values(new_data).returning(table)
+#             result = conn.execute(stmt).mappings().all()
+#             new_data = [dict(row) for row in result]
+#         return new_data
 
 
 def update(table: str | Table, id_c_name: str, data: dict) -> dict:

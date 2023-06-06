@@ -30,7 +30,7 @@ CREATE TABLE users (
 
 CREATE TABLE countries (
     country_id smallserial PRIMARY KEY,
-    name varchar(64) NOT NULL,
+    name varchar(64) UNIQUE NOT NULL,
     flag_url varchar(1023)
 );
 

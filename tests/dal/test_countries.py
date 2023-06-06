@@ -1,0 +1,225 @@
+from operator import itemgetter
+
+import pytest
+from sqlalchemy.exc import IntegrityError
+
+from jormungand.core import db
+from jormungand.core.exceptions import (
+        DataNotFoundError, DuplicateKeyError, InvalidDataError)
+from jormungand.dal import countries
+from tests.utils.data import (
+        db_load_dataset, data_in_table, get_data_from_dataset)
+
+DATASET_1_COUNTRIES = {
+    "countries": {
+        1: {
+            "country_id": 1,
+            "name": "country_1",
+            "flag_url": "country_1.png",
+        },
+    }
+}
+DATASET_2_COUNTRIES = {
+    "countries": {
+        1: {
+            "country_id": 1,
+            "name": "country_1",
+            "flag_url": "country_1.png",
+        },
+        2: {
+            "country_id": 2,
+            "name": "country_2",
+            "flag_url": "country_2.png",
+        },
+    }
+}
+
+
+class TestGet:
+    def test_get_country_by_id_returns_country_data(self, tmp_db):
+        dataset = db_load_dataset(tmp_db, DATASET_2_COUNTRIES, remove_apk=False)
+        table = db.get_table(db.TN_COUNTRIES)
+        expected_data = get_data_from_dataset(dataset, table)[1]
+        prog_data = countries.get_by_id(expected_data["country_id"])
+        assert prog_data == expected_data
+
+    def test_get_non_existing_country_by_id_raises_data_not_found_error(self, tmp_db):
+        with pytest.raises(
+                DataNotFoundError, match=r".*id.*-9999.*"):
+            countries.get_by_id(-9999)
+
+    def test_get_all_countries_returns_all_countries_data_as_list(self, tmp_db):
+        dataset = db_load_dataset(tmp_db, DATASET_2_COUNTRIES, remove_apk=False)
+        table = db.get_table(db.TN_COUNTRIES)
+        expected_data = get_data_from_dataset(dataset, table).values()
+        expected_data = sorted(expected_data, key=itemgetter("country_id"))
+        prog_data = countries.get_all()
+        prog_data = sorted(prog_data, key=itemgetter("country_id"))
+        assert prog_data == expected_data
+
+    def test_get_all_countries_when_no_countries_exist_returns_empty_list(self, tmp_db):
+        prog_data = countries.get_all()
+        assert prog_data == []
+
+
+class TestAddOne:
+    def test_add_new_country_adds_country(self, tmp_db):
+        dataset = db_load_dataset(tmp_db, DATASET_1_COUNTRIES, load_to_db=False)
+        table = db.get_table(db.TN_COUNTRIES)
+        input_data = get_data_from_dataset(dataset, table)[1]
+        countries.add_one(input_data)
+        data_in_table(tmp_db, input_data, table)
+
+    def test_add_new_country_returns_country_data_with_id(self, tmp_db):
+        dataset = db_load_dataset(tmp_db, DATASET_1_COUNTRIES, load_to_db=False)
+        table = db.get_table(db.TN_COUNTRIES)
+        input_data = get_data_from_dataset(dataset, table)[1]
+        prog_data = countries.add_one(input_data)
+        assert prog_data.pop("country_id", None) is not None
+        assert prog_data == input_data
+
+    def test_add_existing_country_raises_duplicate_key_error(self, tmp_db):
+        dataset = db_load_dataset(tmp_db, DATASET_1_COUNTRIES)
+        table = db.get_table(db.TN_COUNTRIES)
+        input_data = get_data_from_dataset(dataset, table)[1]
+        with pytest.raises(
+                DuplicateKeyError,
+                match=rf".*country_id.*{input_data['country_id']}.*"
+                ):
+            countries.add_one(input_data)
+
+    def test_add_new_country_with_invalid_data_raises_invalid_data_error(self, tmp_db):
+        dataset = db_load_dataset(tmp_db, DATASET_1_COUNTRIES, load_to_db=False)
+        table = db.get_table(db.TN_COUNTRIES)
+        input_data = get_data_from_dataset(dataset, table)[1]
+        input_data["country_id"] = "invalid value"
+        with pytest.raises(InvalidDataError):
+            countries.add_one(input_data)
+
+
+class TestAddMany:
+    def test_add_many_countries_adds_new_countries(self, tmp_db):
+        dataset = db_load_dataset(tmp_db, DATASET_2_COUNTRIES, load_to_db=False)
+        table = db.get_table(db.TN_COUNTRIES)
+        input_data = get_data_from_dataset(dataset, table).values()
+        countries.add_many(input_data)
+        data_in_table(tmp_db, input_data, table)
+
+    def test_add_many_new_countries_returns_countries_data_with_id_for_all_input_countries(
+        self, tmp_db
+    ):
+        dataset = db_load_dataset(
+                tmp_db, DATASET_2_COUNTRIES, load_to_db=False)
+        table = db.get_table(db.TN_COUNTRIES)
+        test_data = get_data_from_dataset(dataset, table)
+        input_data = test_data.values()
+        prog_data = countries.add_many(input_data)
+        assert len(prog_data) == len(input_data)
+        for entry in prog_data:
+            country_id = entry.pop("country_id")
+            assert entry == test_data[country_id]
+
+    @pytest.mark.current
+    def test_add_many_countries_with_some_countries_existing_does_not_raise_exception(
+        self, tmp_db
+    ):
+        db_load_dataset(tmp_db, DATASET_1_COUNTRIES, return_copy=False)
+        dataset = db_load_dataset(
+                tmp_db, DATASET_2_COUNTRIES, load_to_db=False)
+        table = db.get_table(db.TN_COUNTRIES)
+        input_data = get_data_from_dataset(dataset, table).values()
+        countries.add_many(input_data)
+
+    def test_add_many_countries_with_some_countries_existing_adds_new_countries(self, tmp_db):
+        db_load_dataset(tmp_db, DATASET_1_COUNTRIES, return_copy=False)
+        dataset = db_load_dataset(
+                tmp_db, DATASET_2_COUNTRIES, load_to_db=False)
+        table = db.get_table(db.TN_COUNTRIES)
+        input_data = get_data_from_dataset(dataset, table).values()
+        countries.add_many(input_data)
+        data_in_table(tmp_db, input_data, table)
+
+    def test_add_many_countries_with_some_countries_existing_returns_country_data_only_for_new_countries(self, tmp_db):
+        db_load_dataset(tmp_db, DATASET_1_COUNTRIES, return_copy=False)
+        dataset = db_load_dataset(
+                tmp_db, DATASET_2_COUNTRIES, load_to_db=False)
+        table = db.get_table(db.TN_COUNTRIES)
+        test_data = get_data_from_dataset(dataset, table)
+        input_data = test_data.values()
+        prog_data = countries.add_many(input_data)
+        assert len(prog_data) == 1
+        assert prog_data[0].pop("country_id", None) is not None
+        assert prog_data[0] == test_data["country_2"]
+
+    def test_add_many_countries_with_all_countries_existing_does_not_raise_exception(
+        self, tmp_db
+    ):
+        dataset = db_load_dataset(tmp_db, DATASET_2_COUNTRIES)
+        table = db.get_table(db.TN_COUNTRIES)
+        input_data = get_data_from_dataset(dataset, table).values()
+        countries.add_many(input_data)
+
+    def test_add_many_countries_with_all_countries_existing_returns_empty_list(self, tmp_db):
+        dataset = db_load_dataset(tmp_db, DATASET_2_COUNTRIES)
+        table = db.get_table(db.TN_COUNTRIES)
+        input_data = get_data_from_dataset(dataset, table).values()
+        prog_data = countries.add_many(input_data)
+        assert prog_data == []
+
+
+class TestUpdate:
+    def test_update_country_updates_country(self, tmp_db):
+        dataset = db_load_dataset(tmp_db, DATASET_1_COUNTRIES, remove_apk=False)
+        table = db.get_table(db.TN_COUNTRIES)
+        input_data = get_data_from_dataset(dataset, table)[1]
+        input_data["name"] = None
+        countries.update(input_data)
+        data_in_table(tmp_db, input_data, table)
+
+    def test_update_country_returns_updated_country_data(self, tmp_db):
+        dataset = db_load_dataset(tmp_db, DATASET_1_COUNTRIES, remove_apk=False)
+        table = db.get_table(db.TN_COUNTRIES)
+        input_data = get_data_from_dataset(dataset, table)[1]
+        input_data["name"] = None
+        prog_data = countries.update(input_data)
+        assert prog_data == input_data
+
+    def test_update_non_existing_country_raises_data_not_found_error(self, tmp_db):
+        dataset = db_load_dataset(tmp_db, DATASET_1_COUNTRIES, remove_apk=False,
+                                  load_to_db=False)
+        table = db.get_table(db.TN_COUNTRIES)
+        input_data = get_data_from_dataset(dataset, table)[1]
+        with pytest.raises(
+                DataNotFoundError,
+                match=rf".*id.*{input_data['country_id']}"
+                ):
+            countries.update(input_data)
+
+    def test_update_country_with_invalid_data_raises_invalid_data_error(self, tmp_db):
+        dataset = db_load_dataset(tmp_db, DATASET_1_COUNTRIES, remove_apk=False)
+        table = db.get_table(db.TN_COUNTRIES)
+        input_data = get_data_from_dataset(dataset, table)[1]
+        input_data["name"] = None
+        with pytest.raises(InvalidDataError):
+            countries.update(input_data)
+
+
+class TestDelete:
+    def test_delete_country_deletes_country(self, tmp_db):
+        dataset = db_load_dataset(tmp_db, DATASET_1_COUNTRIES, remove_apk=False)
+        table = db.get_table(db.TN_COUNTRIES)
+        input_data = get_data_from_dataset(dataset, table)[1]
+        countries.delete(input_data["country_id"])
+        data_in_table(tmp_db, input_data, table, reverse=True)
+
+    def test_delete_country_returns_deleted_country_data(self, tmp_db):
+        dataset = db_load_dataset(tmp_db, DATASET_1_COUNTRIES, remove_apk=False)
+        table = db.get_table(db.TN_COUNTRIES)
+        input_data = get_data_from_dataset(dataset, table)[1]
+        prog_data = countries.delete(input_data["country_id"])
+        assert prog_data == input_data
+
+    def test_delete_non_existing_country_raises_data_not_found_error(self, tmp_db):
+        with pytest.raises(
+                DataNotFoundError, match=r".*id.*-9999.*"):
+            countries.delete(-9999)
