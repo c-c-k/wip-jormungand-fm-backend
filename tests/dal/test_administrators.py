@@ -9,7 +9,7 @@ from jormungand.dal import administrators
 from tests.utils.data import (
         db_load_dataset, data_in_table, get_data_from_dataset)
 
-DATASET_2_USERS = {
+DATASET_FIXED = {
     "users": {
         1: {
             "user_id": 1,
@@ -55,8 +55,8 @@ DATASET_2_ADMINISTRATORS = {
 
 
 @pytest.fixture(scope="function", autouse=True)
-def load_users_dataset(tmp_db):
-    db_load_dataset(tmp_db, DATASET_2_USERS, remove_apk=False)
+def load_fixed_dataset(tmp_db):
+    db_load_dataset(tmp_db, DATASET_FIXED, remove_apk=False)
 
 
 class TestGet:
