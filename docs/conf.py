@@ -16,7 +16,7 @@ sys.path.insert(0, pathlib.Path(__file__).parents[1].resolve().as_posix())
 project = 'Jormungand Flights Managment System'
 copyright = '2023, c-c-k'
 author = 'c-c-k'
-release = '0.1.0'
+release = '0.1.1'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
