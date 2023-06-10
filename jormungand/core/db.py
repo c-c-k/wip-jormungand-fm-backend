@@ -4,8 +4,7 @@ TODO: better documentation for db module
 TODO: error handling
 """
 import contextlib
-from enum import IntEnum, Enum
-import itertools
+from enum import IntEnum
 from pathlib import Path
 
 from sqlalchemy import (
@@ -13,7 +12,8 @@ from sqlalchemy import (
 from sqlalchemy.engine import URL
 
 from .config import config
-from .logging import get_logger, load_logging_configuration
+from .exceptions import MiscError
+from .logging import get_logger
 
 logger = get_logger(__name__)
 sa_loggers = tuple(
@@ -27,21 +27,20 @@ sa_loggers = tuple(
 )
 
 _SQL_DIR = Path(__file__).parent.joinpath('sql')
+_INIT_SCHEMA = _SQL_DIR.joinpath('schema.v0.2.0.sql')
+
 # Table Names
+TN_META = 'meta'
 TN_USER_ROLES = 'user_roles'
 TN_USERS = 'users'
 TN_CUSTOMERS = 'customers'
 TN_ADMINISTRATORS = 'administrators'
 TN_COUNTRIES = 'countries'
-TN_AIRLINE_COMPANIES = 'airline_companies'
-TN_FLIGHTS = 'flights'
-TN_TICKETS = 'tickets'
+TN_AIRPORTS = 'airports'
 TABLES_LAYERED_DEPENDANCY_ORDER = {
-    TN_USER_ROLES: 11, TN_COUNTRIES: 12,
-    TN_USERS: 21,
-    TN_CUSTOMERS: 31, TN_ADMINISTRATORS: 32, TN_AIRLINE_COMPANIES: 33,
-    TN_FLIGHTS: 41,
-    TN_TICKETS: 51
+    TN_USER_ROLES: 11, TN_COUNTRIES: 12, TN_META: 13,
+    TN_USERS: 21, TN_AIRPORTS: 22,
+    TN_CUSTOMERS: 31, TN_ADMINISTRATORS: 32,
 }
 
 _engine: Engine | None = None
@@ -50,49 +49,17 @@ _tables: dict[str, Table] | None = None
 metadata_obj = MetaData()
 
 
-# class Tables:
-#     """TODO: doc"""
-#     # IMPORTANT: The table names in ``table_names`` must appear in their
-#     #            dependency (e.g. "user_roles" must be before "users" 
-#     #            because "users" has a foreign key to "user_roles".
-#     table_names = ('user_roles', 'users', 'customers', 'administrators',
-#                    'countries', 'airline_companies', 'flights', 'tickets')
-#     # The attributes below should be initialized by a call to load_db_tables
-#     # during application startup or testing setup
-#     user_roles: Table = None
-#     users: Table = None
-#     customers: Table = None
-#     administrators: Table = None
-#     countries: Table = None
-#     airline_companies: Table = None
-#     flights: Table = None
-#     tickets: Table = None
-#     t_names_sort_key: dict[str, int] = None
-    
-
 class UserRole(IntEnum):
-    CUSTOMER = 1
-    AIRLINE_COMPANY = 2
-    ADMINISTRATOR = 3
-
-
-# TODO: REMOVE: this seems to be redundant
-# def config_sqlalchemy_logging():
-#     """Configures sqlalchemy logging
-
-#     Mostly this just sets the log-level for the sqlalchemy loggers.
-#     for details see:
-#     https://docs.sqlalchemy.org/en/20/core/engines.html#dbengine-logging
-#     :returns: None
-#     """
-#     load_logging_configuration()
-#     load_logging_configuration(config.logging.sqlalchemy)
-#     for logger_name in ('engine', 'pool', 'dialects', 'orm'):
-#         get_logger(f'sqlalchemy.{logger_name}').setLevel(
-#                     config.logging)
+    ADMINISTRATOR = 1
+    CUSTOMER = 2
 
 
 def set_level_sqlalchemy_loggers(level: str):
+    """Set the log-level for the sqlalchemy loggers.
+
+    for details see:
+    https://docs.sqlalchemy.org/en/20/core/engines.html#dbengine-logging
+    """
     for sa_logger in sa_loggers:
         sa_logger.setLevel(level)
 
@@ -133,11 +100,6 @@ def load_db_tables():
         for table_name in TABLES_LAYERED_DEPENDANCY_ORDER
     }
     set_level_sqlalchemy_loggers("DEBUG")
-    # for table_name in TABLES_LAYERED_DEPENDANCY_ORDER.keys():
-    #     table = Table(table_name, metadata_obj, autoload_with=get_db_engine())
-    #     setattr(Tables, table_name, table)
-    # table_names_sort_key = dict(zip(Tables.table_names, itertools.count()))
-    # setattr(Tables, 't_names_sort_key', table_names_sort_key)
 
 
 def get_table(table: str | Table) -> Table:
@@ -173,24 +135,6 @@ def get_colum_names(table: str | Table) -> list[str]:
     return tuple(column.name for column in table.columns)
 
 
-# TODO: REMOVE MAYBE: this might be redundant
-# def get_tables(table_names: list[str] | str) -> dict[str, Table] | Table:
-#     global _tables
-#     if _tables is None:
-#         _tables = {
-#             table_name: Table(table_name, metadata_obj,
-#                               autoload_with=get_db_engine())
-#             for table_name in TABLE_NAMES
-#         }
-
-#     if isinstance(table_names, str):
-#         tables = _tables[table_names]
-#     else:
-#         tables = {table_name: _tables[table_name]
-#                   for table_name in table_names}
-#     return tables
-
-
 @contextlib.contextmanager
 def get_db_connection(begin_once: bool = True) -> Connection | object:
     """Get an sqlalchemy database connection
@@ -221,12 +165,24 @@ def get_db_connection(begin_once: bool = True) -> Connection | object:
         pass
 
 
-def init_db():
-    """TODO: Docstring for init_db. """
+def init_db(confirm_init_db=False):
+    """.. IMPORTANT::
+            for the moment this is only meant for unittests,
+            development (and production) databases should be adjusted
+            manually or via migration scripts (which are also written manually
+            for the moment)
+            """
 
-    # TODO: existing db handling
-    schema = text(_SQL_DIR.joinpath('./schema.sql').read_text())
-    # TODO: Adjust stored procedures to per table id names
+    if not confirm_init_db:
+        raise MiscError("""
+        `init_db()` can be a destructive and hard to reverse action if called
+        accidentally when the database already contains data, if you are sure
+        of what you are doing invoke this function with:
+        `init_db(confirm_init_db=True)`
+                """)
+
+    schema = text(_INIT_SCHEMA.read_text())
+    # TODO: Adjust stored procedures
     # stored_procedures = text(
     #         _SQL_DIR.joinpath('./stored_procedures.sql').read_text())
     with get_db_connection(begin_once=False) as conn:
@@ -234,12 +190,6 @@ def init_db():
         # TODO: Adjust stored procedures to per table id names
         # conn.execute(stored_procedures)
         conn.commit()
-        # conn.execute(text("""
-        # INSERT INTO user_roles (user_role_id, role_name) VALUES (:id, :rolename);
-        # """), [
-            # {'id': int(user_role), 'rolename': user_role.name} 
-            # for user_role in UserRole]
-        # )
         table = get_table(TN_USER_ROLES)
         data = [
             {'user_role_id': int(user_role), 'role_name': user_role.name}

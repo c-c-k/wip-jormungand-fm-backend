@@ -49,4 +49,9 @@ class DataNotFoundError(Exception):
                 ).substitute(table_name=table_name,
                              column_name=column_name, value=value)
         super().__init__(msg, *args, **kwargs)
-        
+
+
+class MiscError(Exception):
+    pass
+
+
