@@ -7,19 +7,6 @@ from jormungand.core import db
 from tests.utils.data import db_load_dataset, dataset_in_db
 
 DATASET_TEST_SETUP_DATASET = {
-    'airline_companies': {
-        'airline_company': {
-            'user_id': 1,
-            'country_id': 1,
-            'name': 'airline_company',
-        },
-    },
-    'countries': {
-        'country': {
-            'country_id': 1,
-            'name': 'country',
-        },
-    },
     'users': {
         'user': {
             'user_id': 1,

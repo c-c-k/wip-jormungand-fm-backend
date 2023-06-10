@@ -23,14 +23,6 @@ DATASET_TEMPLATE = {
             'email': 'customer_user_1@email_1.com',
             'avatar_url': 'user_avatars/customer_user_1.png',
         },
-        'airline_user_1': {
-            'user_id': 61,
-            'user_role': int(db.UserRole.AIRLINE_COMPANY),
-            'username': 'airline_user_1',
-            'password': 'pass',
-            'email': 'airline_user_1@email_1.com',
-            'avatar_url': 'user_avatars/airline_user_1.png',
-        },
         'admin_user_1': {
             'user_id': 71,
             'user_role': int(db.UserRole.ADMINISTRATOR),

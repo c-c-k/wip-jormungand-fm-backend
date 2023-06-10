@@ -27,6 +27,6 @@ def tmp_db():
     db.set_level_sqlalchemy_loggers("WARN")
     with create_temp_db_engine() as engine:
         db.load_db_engine(engine)
-        db.init_db()
+        db.init_db(confirm_init_db=True)
         db.set_level_sqlalchemy_loggers("DEBUG")
         yield engine
