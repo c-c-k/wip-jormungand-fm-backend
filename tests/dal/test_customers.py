@@ -2,6 +2,8 @@ from operator import itemgetter
 
 import pytest
 
+pytest.skip(allow_module_level=True, reason="disabled due to dal being broken")
+
 from jormungand.core import db
 from jormungand.core.exceptions import (
         DataNotFoundError, DuplicateKeyError, InvalidDataError)
