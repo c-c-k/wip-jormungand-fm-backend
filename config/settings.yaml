@@ -1,4 +1,5 @@
 default:
+    jormungand_version: '0.2.0'
     env_name: default
     default_logger_name: 'jormungand.default_logger'
 
