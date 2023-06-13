@@ -1,11 +1,3 @@
-DROP TABLE IF EXISTS user_roles CASCADE;
-DROP TABLE IF EXISTS users CASCADE;
-DROP TABLE IF EXISTS customers CASCADE;
-DROP TABLE IF EXISTS administrators CASCADE;
-DROP TABLE IF EXISTS countries CASCADE;
-DROP TABLE IF EXISTS airports CASCADE;
-DROP TABLE IF EXISTS meta CASCADE;
-
 CREATE TABLE user_roles (
     user_role_id smallserial PRIMARY KEY,
     role_name varchar(16) UNIQUE NOT NULL
@@ -46,7 +38,9 @@ CREATE TABLE airports (
     country_id integer REFERENCES countries ON DELETE RESTRICT NOT NULL,
     iata_code varchar UNIQUE NOT NULL,
     name varchar,
-    municipality varchar
+    municipality varchar,
+    home_link varchar,
+    wikipedia_link varchar
 );
 
 CREATE TABLE meta (
