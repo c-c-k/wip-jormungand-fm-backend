@@ -27,7 +27,7 @@ sa_loggers = tuple(
 )
 
 _SQL_DIR = Path(__file__).parent.joinpath('sql')
-_INIT_SCHEMA = _SQL_DIR.joinpath('schema.v0.2.0.sql')
+_INIT_SCHEMA = _SQL_DIR.joinpath('schema.sql')
 
 # Table Names
 TN_META = 'meta'
