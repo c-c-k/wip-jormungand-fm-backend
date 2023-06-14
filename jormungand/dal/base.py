@@ -1,6 +1,8 @@
 """
 TODO: dal.user module docstring
 """
+import csv
+from pathlib import Path
 import re
 
 from sqlalchemy import (
@@ -14,6 +16,36 @@ from jormungand.core.exceptions import (
 from jormungand.core.logging import get_logger
 
 logger = get_logger(__name__)
+
+CSV_DIR = Path(__file__).parent.joinpath("csv")
+
+
+def get_data_from_csv(
+    dataset_path: Path,
+    field_names: dict[str, str]
+        ) -> list[dict]:
+    """Get selective data from a csv dataset.
+
+    :field_names: A dictionary used to both select the fields
+        that should be imported and map their csv field names
+        to application conformant field names.
+    """
+
+    data = []
+    selected_fields = set(field_names.keys())
+
+    with open(dataset_path, "r", encoding="UTF-8") as dataset_file:
+        dict_reader = csv.DictReader(dataset_file)
+        for entry in dict_reader:
+            data.append(
+                {
+                    field_names[field]: value
+                    for field, value in entry.items()
+                    if field in selected_fields
+                }
+            )
+
+    return data
 
 
 def get_by_id(table: str | Table, id_c_name: str, id_: int) -> dict:
