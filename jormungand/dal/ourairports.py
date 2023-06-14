@@ -10,7 +10,7 @@ _DATASET_COUNTRIES = CSV_DIR.joinpath("countries")
 _DATASET_AIRPORTS = CSV_DIR.joinpath("airports")
 
 
-def get_oa_countries_data() -> list[dict]:
+def oa_countries_get_all() -> list[dict]:
     """Get selective countries data from the OurAirports csv dataset.
 
     Currently the data imported is:
@@ -24,12 +24,12 @@ def get_oa_countries_data() -> list[dict]:
     )
 
 
-def get_oa_airports_data() -> list[dict]:
+def oa_airports_get_all() -> list[dict]:
     """Get selective airport data from the OurAirports csv dataset.
 
     Currently the data imported is:
     * iso_country->country_code: Airport country ISO 3166-1 alpha-2 codes.
-    * type: A size and usage classification of the airport.
+    * type->airport_type: A size and usage classification of the airport.
     * iata_code: Airport IATA codes.
     * name: Airport names.
     * municipality: Airport municipalities.
@@ -40,7 +40,7 @@ def get_oa_airports_data() -> list[dict]:
         dataset_path=_DATASET_AIRPORTS,
         field_names={
             "iso_country": "country_code",
-            "type": "type",
+            "type": "airport_type",
             "iata_code": "iata_code",
             "name": "name",
             "municipality": "municipality",
