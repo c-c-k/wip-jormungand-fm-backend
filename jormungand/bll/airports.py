@@ -4,8 +4,9 @@
 
 from typing import ClassVar
 
-from pydantic import BaseModel, Field, ValidationError, validator
+from pydantic import BaseModel, Field, validator
 
+from .base import gen_clean_data
 from jormungand.dal import (
     oa_airports_get_all, airports_del_all, airports_add_many,
     countries_get_code_to_id_map)
@@ -52,17 +53,6 @@ class AirportModel(BaseModel):
             raise ValueError(f"Unknown country code: {v}")
 
 
-def _get_clean_airports_data(airports_data: list[dict]) -> list[dict]:
-    cleaned_airports_data = []
-    for airport_data in airports_data:
-        try:
-            airport_data = AirportModel(airport_data).dict()
-        except ValidationError:
-            continue
-        cleaned_airports_data.append(airport_data)
-    return cleaned_airports_data
-
-
 def import_oa_airport_data():
     """Import airport data from the OurAirports.com datasets.
 
@@ -84,5 +74,5 @@ def import_oa_airport_data():
     airports_del_all()
     airports_data = oa_airports_get_all()
     AirportModel._country_code_to_id_map = countries_get_code_to_id_map()
-    cleaned_airports_data = _get_clean_airports_data(airports_data)
+    cleaned_airports_data = gen_clean_data(airports_data, AirportModel)
     airports_add_many(cleaned_airports_data)

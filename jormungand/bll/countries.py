@@ -2,8 +2,9 @@
 
 """
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field
 
+from .base import gen_clean_data
 from jormungand.dal import (
     oa_countries_get_all, countries_del_all, countries_add_many)
 
@@ -18,17 +19,6 @@ class CountryModel(BaseModel):
     """
     code: str = Field(to_upper=True, regex=r'^[a-zA-Z]{2}$')
     name: str = Field(min_length=2)
-
-
-def _get_clean_countries_data(countries_data: list[dict]) -> list[dict]:
-    cleaned_countries_data = []
-    for country_data in countries_data:
-        try:
-            country_data = CountryModel(country_data).dict()
-        except ValidationError:
-            continue
-        cleaned_countries_data.append(country_data)
-    return cleaned_countries_data
 
 
 def import_oa_country_data():
@@ -48,5 +38,5 @@ def import_oa_country_data():
 
     countries_del_all()
     countries_data = oa_countries_get_all()
-    cleaned_countries_data = _get_clean_countries_data(countries_data)
+    cleaned_countries_data = gen_clean_data(countries_data, CountryModel)
     countries_add_many(cleaned_countries_data)
