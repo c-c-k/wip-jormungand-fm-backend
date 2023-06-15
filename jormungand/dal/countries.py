@@ -2,6 +2,11 @@
 
 """
 
+from sqlalchemy import (
+        Connection, Table, select, insert, text,
+        update as sa_update, delete as sa_delete)
+from sqlalchemy.exc import NoResultFound, IntegrityError, SQLAlchemyError
+
 from . import base
 from jormungand.core import db
 from jormungand.core.logging import get_logger
@@ -19,6 +24,18 @@ def countries_init_data(data: list[dict]):
     :returns: None
     """
     base.init_table_data(_TABLE_NAME, data)
+
+
+def countries_get_code_to_id_map() -> dict[str, int]:
+    """Get a mapping of country codes to their db primary keys.
+
+    :returns: dictionary {<country_code>: <country_id>}
+    """
+    table = db.get_table(_TABLE_NAME)
+    with db.get_db_connection() as conn:
+        stmt = select(table.c['code'], table.c['country_id'])
+        result = conn.execute(stmt).all()
+        return {code: pk for code, pk in result}
 
 
 # def get_by_id(id_):
