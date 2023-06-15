@@ -1,12 +1,12 @@
-"""
-TODO: dal.user module docstring
+"""Basic/shared functionality for the Data Access Layer.
+
 """
 import csv
 from pathlib import Path
 import re
 
 from sqlalchemy import (
-        Connection, Table, select, insert,
+        Connection, Table, select, insert, text,
         update as sa_update, delete as sa_delete)
 from sqlalchemy.exc import NoResultFound, IntegrityError, SQLAlchemyError
 
@@ -61,15 +61,15 @@ def get_by_id(table: str | Table, id_c_name: str, id_: int) -> dict:
 
 
 def get_all(table: str) -> list[dict]:
+    # TODO: STOPPED AT: trying to decide if get operations should return
+    #       data/raise exception like they do now or return status dict
+    #       like I'm thinking to do with the CUD operations.
     table = db.get_table(table)
     with db.get_db_connection() as conn:
         stmt = select(table)
         result = conn.execute(stmt).mappings().all()
         return list(dict(mapping) for mapping in result)
 
-# TODO: STOPPED AT: trying to decide if get operations should return
-#       data/raise exception like they do now or return status dict
-#       like I'm thinking to do with the CUD operations.
 
 def _gen_unexpected_err_info(error: Exception, **kwargs) -> dict:
     return {
@@ -105,17 +105,17 @@ def _insert_one(
                 "status": "success",
                 "data": conn.execute(stmt, data).mappings().one()
                 }
-    except IntegrityError as e:
-        if "duplicate key value violates unique" in e.args[0]:
+    except IntegrityError as err:
+        if "duplicate key value violates unique" in err.args[0]:
             result = _gen_duplication_err_info(
-                    err_msg=e.args[0], table_name=table.name,
+                    err_msg=err.args[0], table_name=table.name,
                     data=data, action="insert")
         else:
             result = _gen_unexpected_err_info(
-                    err_msg=e.args[0], table_name=table.name, data=data)
-    except SQLAlchemyError:
+                    err_msg=err.args[0], table_name=table.name, data=data)
+    except SQLAlchemyError as err:
         result = _gen_unexpected_err_info(
-                err_msg=e.args[0], table_name=table.name, data=data)
+                err_msg=err.args[0], table_name=table.name, data=data)
     return result
 
 
@@ -231,3 +231,18 @@ def delete(table: str | Table, id_c_name: str, id_: int) -> dict:
             raise DataNotFoundError(table_name=table.name,
                                     column_name=id_c_name, value=id_)
         return dict(result)
+
+
+def init_table_data(table: str | Table, data: list[dict]):
+    """Remove all existing data from a table and add new data instead.
+
+    :table: The table to be initialized with new data.
+    :data: The new data that is to be inserted into the table.
+    :returns: None
+    """
+    table = db.get_table(table)
+    with db.get_db_connection(begin_once=False) as conn:
+        conn.execute(text(
+            f"TRUNCATE TABLE {table.name} RESTART IDENTITY CASCADE"
+            )).execution_options(autocommit=True)
+        conn.execute(insert(table).values(data))
