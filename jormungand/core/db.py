@@ -110,9 +110,15 @@ def get_table(table: str | Table) -> Table:
     if _tables is None:
         load_db_tables()
     if isinstance(table, str):
-        _table = _tables[table]
-    else:
+        try:
+            _table = _tables[table]
+        except KeyError:
+            raise ValueError(f"Unknown table name: {table}")
+    elif isinstance(table, Table):
         _table = table
+    else:
+        raise TypeError(
+                f"unsuported type for table selection: {type(table)}")
     return _table
 
 
