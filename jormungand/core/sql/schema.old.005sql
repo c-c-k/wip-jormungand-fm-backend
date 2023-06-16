@@ -6,9 +6,6 @@ DROP TABLE IF EXISTS countries CASCADE;
 DROP TABLE IF EXISTS airports CASCADE;
 DROP TABLE IF EXISTS meta CASCADE;
 
-DROP VIEW IF EXISTS airports_join_countries CASCADE;
-DROP VIEW IF EXISTS airports_search_strings CASCADE;
-
 CREATE TABLE user_roles (
     user_role_id smallserial PRIMARY KEY,
     role_name varchar(16) UNIQUE NOT NULL
@@ -56,48 +53,3 @@ CREATE TABLE meta (
     property varchar UNIQUE NOT NULL,
     value varchar
 );
-
-CREATE VIEW airports_join_countries
-AS SELECT
-    air.airport_id AS airport_id,
-    cou.code AS country_code,
-    air.iata_code AS iata_code,
-    cou.name AS country_name,
-    air.name AS airport_name,
-    air.municipality AS municipality
-FROM airports AS air
-INNER JOIN countries AS cou USING (country_id);
-
-CREATE VIEW airports_search_strings
-AS SELECT
-    country_code AS search_string,
-    airport_id,
-    1 AS priority
-FROM airports_join_countries
-UNION ALL
-SELECT
-    iata_code AS search_string,
-    airport_id,
-    2 AS priority
-FROM airports_join_countries
-UNION ALL
-SELECT
-    country_name AS search_string,
-    airport_id,
-    3 AS priority
-FROM airports_join_countries
-UNION ALL
-SELECT
-    municipality AS search_string,
-    airport_id,
-    4 AS priority
-FROM airports_join_countries
-UNION ALL
-SELECT
-    airport_name AS search_string,
-    airport_id,
-    5 AS priority
-FROM airports_join_countries
-ORDER BY
-    priority ASC,
-    search_string ASC;
