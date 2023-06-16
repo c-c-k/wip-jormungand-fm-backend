@@ -9,7 +9,7 @@ from jormungand.core import db
 from jormungand.core.exceptions import (
         DataNotFoundError, DuplicateKeyError, InvalidDataError)
 from jormungand.dal import users
-from tests.utils.data import (
+from tests.utils import (
         db_load_dataset, data_in_table, get_data_from_dataset)
 
 DATASET_1_USERS = {

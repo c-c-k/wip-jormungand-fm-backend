@@ -1,12 +1,11 @@
 from logging import getLogger
 
 import pytest
-from sqlalchemy import create_engine, text, Engine
 
 from jormungand.core.config import config
 from jormungand.core.logging import load_logging_configuration
 from jormungand.core import db
-from tests.utils.temp_db import create_temp_db_engine
+from tests.utils import create_temp_db_engine
 
 logger = getLogger(__name__)
 

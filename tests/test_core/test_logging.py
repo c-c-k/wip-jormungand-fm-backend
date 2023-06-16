@@ -1,7 +1,5 @@
 import logging
 
-import pytest
-
 from jormungand.core.config import config
 from jormungand.core.logging import get_logger
 
@@ -24,4 +22,3 @@ def test_get_logger_returns_correct_logger():
     config['default_logger_name'] = 'test_logger'
     logger = get_logger()
     assert logger.name == 'test_logger'
-

@@ -1,10 +1,9 @@
 from copy import deepcopy
 
-import pytest
-from sqlalchemy import Engine, text, select
+from sqlalchemy import Engine, select
 
 from jormungand.core import db
-from tests.utils.data import db_load_dataset, dataset_in_db
+from tests.utils import db_load_dataset, dataset_in_db
 
 DATASET_TEST_SETUP_DATASET = {
     'users': {
@@ -61,4 +60,3 @@ def test_dataset_testing_helper_utils(tmp_db):
         stmt = select(table).filter_by(**entry)
         result = conn.execute(stmt).all()
         assert len(result) == 0
-        
