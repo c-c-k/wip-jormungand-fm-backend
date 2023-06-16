@@ -10,7 +10,6 @@ from pathlib import Path
 from sqlalchemy import (
     create_engine, Engine, Connection, MetaData, Table, text, insert)
 from sqlalchemy.engine import URL
-
 from .config import config
 from .exceptions import MiscError
 from .logging import get_logger
@@ -27,7 +26,8 @@ sa_loggers = tuple(
 )
 
 _SQL_DIR = Path(__file__).parent.joinpath('sql')
-_INIT_SCHEMA = _SQL_DIR.joinpath('schema.sql')
+_SQL_INIT_SCHEMA = _SQL_DIR.joinpath('schema.sql')
+_SQL_CUSTOM_FUNCTIONS = _SQL_DIR.joinpath('custom_functions.sql')
 
 # Table Names
 TN_META = 'meta'
@@ -187,14 +187,10 @@ def init_db(confirm_init_db=False):
         `init_db(confirm_init_db=True)`
                 """)
 
-    schema = text(_INIT_SCHEMA.read_text())
-    # TODO: Adjust stored procedures
-    # stored_procedures = text(
-    #         _SQL_DIR.joinpath('./stored_procedures.sql').read_text())
+    schema = text(_SQL_INIT_SCHEMA.read_text())
+    custom_functions = text(_SQL_CUSTOM_FUNCTIONS.read_text())
     with get_db_connection(begin_once=False) as conn:
         conn.execute(schema)
-        # TODO: Adjust stored procedures to per table id names
-        # conn.execute(stored_procedures)
         conn.commit()
         table = get_table(TN_USER_ROLES)
         data = [
@@ -203,4 +199,5 @@ def init_db(confirm_init_db=False):
             ]
         conn.execute(insert(table), data)
         conn.commit()
- 
+        conn.execute(custom_functions)
+        conn.commit()
