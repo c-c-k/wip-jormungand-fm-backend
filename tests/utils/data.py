@@ -150,6 +150,14 @@ def get_data_from_dataset(
     return data
 
 
+def table_entry_count(engine_: Engine, table: str | Table) -> int:
+    table = db.get_table(table)
+    with engine_.begin() as conn:
+        stmt = select(table)
+        result = conn.execute(stmt).all()
+        return len(result)
+
+
 def data_in_table(
         engine_: Engine, data: list[dict] | dict, table: str | Table,
         reverse: bool = False

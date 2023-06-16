@@ -244,5 +244,7 @@ def init_table_data(table: str | Table, data: list[dict]):
     with db.get_db_connection(begin_once=False) as conn:
         conn.execute(text(
             f"TRUNCATE TABLE {table.name} RESTART IDENTITY CASCADE"
-            )).execution_options(autocommit=True)
+            ))
+        conn.commit()
         conn.execute(insert(table).values(data))
+        conn.commit()

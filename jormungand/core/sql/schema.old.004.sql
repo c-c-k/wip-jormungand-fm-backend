@@ -36,13 +36,13 @@ CREATE TABLE administrators (
 );
 
 CREATE TABLE countries (
-    country_id serial PRIMARY KEY,
+    country_id integer PRIMARY KEY,
     code varchar UNIQUE NOT NULL,
     name varchar UNIQUE NOT NULL
 );
 
 CREATE TABLE airports (
-    airport_id serial PRIMARY KEY,
+    airport_id integer PRIMARY KEY,
     country_id integer REFERENCES countries ON DELETE RESTRICT NOT NULL,
     iata_code varchar UNIQUE NOT NULL,
     name varchar,

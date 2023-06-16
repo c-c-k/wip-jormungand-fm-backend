@@ -1,0 +1,10 @@
+id,code,name,continent,wikipedia_link,keywords
+,AA,valid country a,,,
+,,country without code,,,
+,X,country with invalid code (too short),,,
+,xx,country with invalid code (lowercase),,,
+,XXX,country with invalid code (too long),,,
+,X1,country with invalid code (contains digit),,,
+,ZZ,,,,
+,ZZ,z,,,
+,BB,valid country b,,,

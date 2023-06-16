@@ -16,15 +16,15 @@ from jormungand.dal import (
 ACCEPTED_AIRPORT_TYPES = {"large_airport"}
 
 
-class CountryModel(BaseModel):
+class OACountryModel(BaseModel):
     """Country data pydantic model
 
     :code: Country ISO 3166-1 alpha-2 code.
-        2 letters, will be converted to uppercase.
+        2 uppercase letters.
     :name: country name.
         2 characters minimum.
     """
-    code: str = Field(to_upper=True, regex=r'^[a-zA-Z]{2}$')
+    code: str = Field(regex=r'^[A-Z]{2}$')
     name: str = Field(min_length=2)
 
 
@@ -44,18 +44,18 @@ def import_oa_country_data():
     """
 
     countries_data = oa_countries_get_all()
-    cleaned_countries_data = gen_clean_data(countries_data, CountryModel)
+    cleaned_countries_data = gen_clean_data(countries_data, OACountryModel)
     countries_init_data(cleaned_countries_data)
 
 
-class AirportModel(BaseModel):
+class OAAirportModel(BaseModel):
     """Airport data pydantic model
 
     :airport_type: A size and usage classification of the airport.
         used to filter airports according to ACCEPTED_AIRPORT_TYPES.
         excluded from model export data.
     :iata_code: aiport IATA code.
-        3 letters, will be converted to uppercase.
+        3 uppercase letters.
     :country_id: db pk for the country that hosts the airport.
     :country_code: country code of the country that hosts the airport.
         used to get country_id.
@@ -65,9 +65,9 @@ class AirportModel(BaseModel):
     :name: airport name.
         2 characters minimum.
     """
-    _country_code_to_id_map: None | ClassVar[dict[str, int]] = None
+    _country_code_to_id_map: ClassVar[dict[str, int] | None] = None
     airport_type: str = Field(exclude=True)
-    iata_code: str = Field(to_upper=True, regex=r'^[a-zA-Z]{3}$')
+    iata_code: str = Field(regex=r'^[A-Z]{3}$')
     country_id: int | None = None
     country_code: str = Field(exclude=True)
     municipality: str = Field(min_length=2)
@@ -81,7 +81,7 @@ class AirportModel(BaseModel):
     @validator("country_code")
     def check_and_convert_country_code_to_id(cls, v, values):
         try:
-            values["country_id"] = (AirportModel._country_code_to_id_map[v])
+            values["country_id"] = (OAAirportModel._country_code_to_id_map[v])
         except KeyError:
             raise ValueError(f"Unknown country code: {v}")
 
@@ -105,6 +105,6 @@ def import_oa_airport_data():
     """
 
     airports_data = oa_airports_get_all()
-    AirportModel._country_code_to_id_map = countries_get_code_to_id_map()
-    cleaned_airports_data = gen_clean_data(airports_data, AirportModel)
+    OAAirportModel._country_code_to_id_map = countries_get_code_to_id_map()
+    cleaned_airports_data = gen_clean_data(airports_data, OAAirportModel)
     airports_init_data(cleaned_airports_data)

@@ -6,8 +6,8 @@ datasets provided by https://ourairports.com/ .
 
 from .base import CSV_DIR, get_data_from_csv
 
-_DATASET_COUNTRIES = CSV_DIR.joinpath("countries")
-_DATASET_AIRPORTS = CSV_DIR.joinpath("airports")
+_DATASET_COUNTRIES = CSV_DIR.joinpath("countries.csv")
+_DATASET_AIRPORTS = CSV_DIR.joinpath("airports.csv")
 
 
 def oa_countries_get_all() -> list[dict]:
