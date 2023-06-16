@@ -5,9 +5,7 @@ import csv
 from pathlib import Path
 import re
 
-from sqlalchemy import (
-        Connection, Table, select, insert, text,
-        update as sa_update, delete as sa_delete)
+import sqlalchemy as sa
 from sqlalchemy.exc import NoResultFound, IntegrityError, SQLAlchemyError
 
 from jormungand.core import db
@@ -26,7 +24,7 @@ def get_data_from_csv(
         ) -> list[dict]:
     """Get selective data from a csv dataset.
 
-    :field_names: A dictionary used to both select the fields
+    :field_names: A dictionary used to both sa.select the fields
         that should be imported and map their csv field names
         to application conformant field names.
     """
@@ -48,10 +46,10 @@ def get_data_from_csv(
     return data
 
 
-def get_by_id(table: str | Table, id_c_name: str, id_: int) -> dict:
+def get_by_id(table: str | sa.Table, id_c_name: str, id_: int) -> dict:
     table = db.get_table(table)
     with db.get_db_connection() as conn:
-        stmt = select(table).where(table.c[id_c_name] == id_)
+        stmt = sa.select(table).where(table.c[id_c_name] == id_)
         result = conn.execute(stmt).mappings().one_or_none()
         if result is not None:
             return dict(result)
@@ -66,7 +64,7 @@ def get_all(table: str) -> list[dict]:
     #       like I'm thinking to do with the CUD operations.
     table = db.get_table(table)
     with db.get_db_connection() as conn:
-        stmt = select(table)
+        stmt = sa.select(table)
         result = conn.execute(stmt).mappings().all()
         return list(dict(mapping) for mapping in result)
 
@@ -82,7 +80,7 @@ def _gen_unexpected_err_info(error: Exception, **kwargs) -> dict:
             }
 
 
-def _gen_duplication_err_info(error: Exception, table: Table) -> dict:
+def _gen_duplication_err_info(error: Exception, table: sa.Table) -> dict:
     column_name, value = re.search(
             r"DETAIL:  Key \(([^)+])\)=\(([^)+])\) already exists."
             ).groups
@@ -97,9 +95,9 @@ def _gen_duplication_err_info(error: Exception, table: Table) -> dict:
 
 
 def _insert_one(
-        conn: Connection, table: Table, id_c_name: str, data: dict
+        conn: sa.Connection, table: sa.Table, id_c_name: str, data: dict
         ) -> dict:
-    stmt = insert(table).values(data).returning(table)
+    stmt = sa.insert(table).values(data).returning(table)
     try:
         result = {
                 "status": "success",
@@ -109,7 +107,7 @@ def _insert_one(
         if "duplicate key value violates unique" in err.args[0]:
             result = _gen_duplication_err_info(
                     err_msg=err.args[0], table_name=table.name,
-                    data=data, action="insert")
+                    data=data, action="sa.insert")
         else:
             result = _gen_unexpected_err_info(
                     err_msg=err.args[0], table_name=table.name, data=data)
@@ -120,9 +118,9 @@ def _insert_one(
 
 
 # def _insert_one(
-#         conn: Connection, table: Table, id_c_name: str, data: dict
+#         conn: sa.Connection, table: sa.Table, id_c_name: str, data: dict
 #         ) -> dict:
-#     stmt = insert(table).values(data).returning(table)
+#     stmt = sa.insert(table).values(data).returning(table)
 #     try:
 #         result = conn.execute(stmt, data).mappings().one()
 #     except (IntegrityError, DataError) as e:
@@ -136,16 +134,16 @@ def _insert_one(
 #     return dict(result)
 
 
-def add_one(table: str | Table, id_c_name: str, data: dict) -> dict:
+def add_one(table: str | sa.Table, id_c_name: str, data: dict) -> dict:
     table = db.get_table(table)
     with db.get_db_connection() as conn:
         return _insert_one(conn, table, id_c_name, data)
 
 
-# def add_one(table: str | Table, id_c_name: str, data: dict) -> dict:
+# def add_one(table: str | sa.Table, id_c_name: str, data: dict) -> dict:
 #     table = db.get_table(table)
 #     with db.get_db_connection() as conn:
-#         stmt = insert(table).values(data).returning(table)
+#         stmt = sa.insert(table).values(data).returning(table)
 #         try:
 #             result = conn.execute(stmt, data).mappings().one()
 #         except (IntegrityError, DataError) as e:
@@ -159,7 +157,7 @@ def add_one(table: str | Table, id_c_name: str, data: dict) -> dict:
 
 
 def safe_add_many(
-        table: str | Table, id_c_name: str, data: list[dict]
+        table: str | sa.Table, id_c_name: str, data: list[dict]
         ) -> list[dict]:
     """"safely" adds multiple entries
 
@@ -181,13 +179,13 @@ def safe_add_many(
 
 # TODO: if/when needed
 # def bulk_add_many(
-#         table: str | Table, id_c_name: str, data: list[dict]
+#         table: str | sa.Table, id_c_name: str, data: list[dict]
 #         ) -> list[dict]:
 #     input_ids = [entry[id_c_name] for entry in data]
 #     table = db.get_table(table)
 #     with db.get_db_connection() as conn:
 #         stmt = (
-#                 select(table.c[id_c_name])
+#                 sa.select(table.c[id_c_name])
 #                 .where(table.c[id_c_name].in_(input_ids))
 #                 )
 #         result = conn.execute(stmt).all()
@@ -198,17 +196,19 @@ def safe_add_many(
 #                 if entry[id_c_name] in new_ids
 #                 ]
 #         if new_data != []:
-#             stmt = insert(table).values(new_data).returning(table)
+#             stmt = sa.insert(table).values(new_data).returning(table)
 #             result = conn.execute(stmt).mappings().all()
 #             new_data = [dict(row) for row in result]
 #         return new_data
 
 
-def update(table: str | Table, id_c_name: str, data: dict) -> dict:
+def update(table: str | sa.Table, id_c_name: str, data: dict) -> dict:
     table = db.get_table(table)
     with db.get_db_connection() as conn:
-        stmt = (sa_update(table).where(table.c[id_c_name] == data[id_c_name])
-                .values(data).returning(table))
+        stmt = (sa.update(table)
+                .where(table.c[id_c_name] == data[id_c_name])
+                .values(data).returning(table)
+                )
         try:
             result = conn.execute(stmt).mappings().one()
         except NoResultFound:
@@ -220,10 +220,10 @@ def update(table: str | Table, id_c_name: str, data: dict) -> dict:
         return dict(result)
 
 
-def delete(table: str | Table, id_c_name: str, id_: int) -> dict:
+def delete(table: str | sa.Table, id_c_name: str, id_: int) -> dict:
     table = db.get_table(table)
     with db.get_db_connection() as conn:
-        stmt = (sa_delete(table).where(table.c[id_c_name] == id_)
+        stmt = (sa.delete(table).where(table.c[id_c_name] == id_)
                 .returning(table))
         try:
             result = conn.execute(stmt).mappings().one()
@@ -233,7 +233,7 @@ def delete(table: str | Table, id_c_name: str, id_: int) -> dict:
         return dict(result)
 
 
-def init_table_data(table: str | Table, data: list[dict]):
+def init_table_data(table: str | sa.Table, data: list[dict]):
     """Remove all existing data from a table and add new data instead.
 
     :table: The table to be initialized with new data.
@@ -242,9 +242,9 @@ def init_table_data(table: str | Table, data: list[dict]):
     """
     table = db.get_table(table)
     with db.get_db_connection(begin_once=False) as conn:
-        conn.execute(text(
+        conn.execute(sa.text(
             f"TRUNCATE TABLE {table.name} RESTART IDENTITY CASCADE"
             ))
         conn.commit()
-        conn.execute(insert(table).values(data))
+        conn.execute(sa.insert(table).values(data))
         conn.commit()
