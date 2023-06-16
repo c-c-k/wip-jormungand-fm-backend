@@ -46,6 +46,25 @@ def get_data_from_csv(
     return data
 
 
+def get_column_to_column_map(
+        source_column: sa.Column, target_column: sa.Column
+        ) -> dict[str, int]:
+    """Get a mapping of values from one column to another.
+
+    :source_column: Values from this column will become dict keys.
+    :target_column: Values from this column will become dict values.
+    :returns: dictionary {<source_column>: <target_column>}
+    """
+    with db.get_db_connection() as conn:
+        stmt = sa.select(source_column, target_column)
+        result = conn.execute(stmt).all()
+        return {source: target for source, target in result}
+
+
+def get_columns(*columns: tuple[sa.Column, ...]) -> dict:
+    pass
+
+
 def get_by_id(table: str | sa.Table, id_c_name: str, id_: int) -> dict:
     table = db.get_table(table)
     with db.get_db_connection() as conn:

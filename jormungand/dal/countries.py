@@ -2,10 +2,7 @@
 
 """
 
-from sqlalchemy import (
-        Connection, Table, select, insert, text,
-        update as sa_update, delete as sa_delete)
-from sqlalchemy.exc import NoResultFound, IntegrityError, SQLAlchemyError
+from sqlalchemy import select
 
 from . import base
 from jormungand.core import db
@@ -32,10 +29,8 @@ def countries_get_code_to_id_map() -> dict[str, int]:
     :returns: dictionary {<country_code>: <country_id>}
     """
     table = db.get_table(_TABLE_NAME)
-    with db.get_db_connection() as conn:
-        stmt = select(table.c['code'], table.c['country_id'])
-        result = conn.execute(stmt).all()
-        return {code: pk for code, pk in result}
+    return base.get_column_to_column_map(
+            table.c['code'], table.c['country_id'])
 
 
 # def get_by_id(id_):
