@@ -1,9 +1,61 @@
-"""
-TODO: DOC: tests/utils/data.py
+"""Helper utils for data in db related tests.
+
+The expected dataset format is::
+
+    {
+        "<table name>":
+            <data>[,]
+            [...]
+    }
+
+The expected data format is::
+
+    {
+        <entry id>: {
+            "<field(column) name>": <field(column) value>[,]
+            [...]
+        }[,]
+        [...]
+    }
+
+.. NOTE:: The <entry id> should usually be an integer that is equal
+    to the given/expected row id of the entry in db table.
+
+Example::
+
+DATASET_EXAMPLE = {
+    'users': {
+        '1': {
+            'user_id': 1,
+            'user_role': int(db.UserRole.CUSTOMER),
+            'username': 'customer_user_1',
+            'password': 'pass',
+            'email': 'customer_user_1@email_1.com',
+            'avatar_url': 'user_avatars/customer_user_1.png',
+        },
+        '2': {
+            'user_id': 2,
+            'user_role': int(db.UserRole.CUSTOMER),
+            'username': 'customer_user_2',
+            'password': 'pass',
+            'email': 'customer_user_2@email_2.com',
+            'avatar_url': 'user_avatars/customer_user_2.png',
+        },
+    },
+    'customers': {
+        '1': {
+            'user_id': 1,
+            'first_name': 'customer_1_first_name',
+            'last_name': 'customer_1_last_name',
+            'address': 'country A, city B, street C 5551',
+            'phone_number': '111 111 1111111',
+            'credit_card_number': '4000000000000010',
+        },
+    },
+}
 """
 
 from copy import deepcopy
-from datetime import datetime, timedelta
 from logging import getLogger
 
 from sqlalchemy import (
@@ -12,76 +64,6 @@ from sqlalchemy import (
 from jormungand.core import db
 
 logger = getLogger(__name__)
-
-DATASET_TEMPLATE = {
-    'users': {
-        'customer_user_1': {
-            'user_id': 51,
-            'user_role': int(db.UserRole.CUSTOMER),
-            'username': 'customer_user_1',
-            'password': 'pass',
-            'email': 'customer_user_1@email_1.com',
-            'avatar_url': 'user_avatars/customer_user_1.png',
-        },
-        'admin_user_1': {
-            'user_id': 71,
-            'user_role': int(db.UserRole.ADMINISTRATOR),
-            'username': 'admin_user_1',
-            'password': 'pass',
-            'email': 'admin_user_1@email_1.com',
-            'avatar_url': 'user_avatars/admin_user_1.png',
-        },
-    },
-    'countries': {
-        'country_1': {
-            'country_id': 61,
-            'name': 'country_1',
-            'flag_url': 'country_1.png',
-        },
-    },
-    'airline_companies': {
-        'airline_company_1': {
-            'user_id': 61,
-            'country_id': 61,
-            'name': 'airline_company_1',
-        },
-    },
-    'customers': {
-        'customer_1': {
-            'user_id': 51,
-            'first_name': 'customer_1_first_name',
-            'last_name': 'customer_1_last_name',
-            'address': 'country A, city B, street C 5551',
-            'phone_number': '111 111 1111111',
-            'credit_card_number': '4000000000000010',
-        },
-    },
-    'administrators': {
-        'administrator_1': {
-            'user_id': 71,
-            'first_name': 'administrator_1_first_name',
-            'last_name': 'administrator_1_last_name',
-        },
-    },
-    'flights': {
-        'flight_template_dt_now': {
-            'flight_id': 1,
-            'airline_company_id': 61,
-            'origin_country_id': 81,
-            'destination_country_id': 881,
-            'departure_time': datetime.now(),
-            'landing_time': (datetime.now() + timedelta(hours=1)),
-            'remaining_tickets': 40,
-        },
-    },
-    'tickets': {
-        'ticket_template': {
-            'ticket_id': 1,
-            'flight_id': 1,
-            'customer_id': 51,
-        },
-    },
-}
 
 
 def _copy_dataset(dataset: dict, remove_apk: bool = True) -> dict:
@@ -100,23 +82,13 @@ def _copy_dataset(dataset: dict, remove_apk: bool = True) -> dict:
     return _dataset
 
 
-# def _add_full_user_data(
-#         # TODO: finish add full user data, then use it for the admin tests.
-#         dataset: dict, merge_name: str, merge_tables: list[str | Table]
-#         ):
-#     merge_tables = [db.get_table(table, name_only=True) for table in merge
-
-
-
 def db_load_dataset(
         engine_: Engine, dataset: dict, *, remove_apk: bool = True,
         load_to_db: bool = True, return_copy: bool = True,
-        add_merge: tuple[str, list[str | Table]] = None
         ) -> dict | None:
     """Load a test dataset into a temporary testing database
 
     .. IMPORTANT::
-
             For each test/set of tests that uses a given temporary database
             instance it is essential to only use either test/program side
             generated ids or database auto-generated ids.
@@ -124,6 +96,22 @@ def db_load_dataset(
             going out-of-sync with the database and auto-generating ids
             that were already created by the test/program code and thus
             resulting in IntegrityErrors on the id field.
+
+    :engine_: The sqlalchemy engine that can be used to access the temp db.
+    :dataset: The dataset to be loaded into the temp db.
+    :remove_apk: If set to True all fields marked as autoincrementing
+        primary keys in the db schema are removed from the dataset
+        prior to inserting it into the db.
+    :load_to_db: If set to False the dataset won't be inserted into the db
+        i.e. it will only be copied and returned (remove_apk=True will
+        still take affect but return_copy=False will be ignored).
+    :return_copy: If set to False a copy of the dataset will not be
+        returned (this is ignored if load_to_db=False).
+    :returns: A copy of the dataset or None if return_copy=False.
+        .. NOTE:: If remove_apk was set to true or the dataset did not
+            have the primary key fields set in the first place the returned
+            dataset will contain the primary keys automaticaly generated
+            by the db.
     """
     dataset = _copy_dataset(dataset, remove_apk)
     if not load_to_db:
@@ -138,11 +126,19 @@ def db_load_dataset(
                 stmt = insert(table).values(entry).returning(table)
                 result = conn.execute(stmt).mappings().one()
                 entry.update(result)
-    return dataset
+    if return_copy:
+        return dataset
 
 
 def get_data_from_dataset(
-        dataset: dict, table: Table | str, copy_data:bool = False) -> dict:
+        dataset: dict, table: Table | str, copy_data: bool = False) -> dict:
+    """Extract the data of a specific table from a dataset.
+
+    :dataset: The dataset from which to extract the table.
+    :table: The table for which data is to be extracted.
+    :copy_data: If set to true the data will be deep copied before returning.
+    :returns: A dictionary containing the data of the specified table.
+    """
     table = db.get_table(table)
     data = dataset[table.name]
     if copy_data:
@@ -151,6 +147,12 @@ def get_data_from_dataset(
 
 
 def table_entry_count(engine_: Engine, table: str | Table) -> int:
+    """Count the number of rows in the given table.
+
+    :engine_: The sqlalchemy engine that can be used to access the temp db.
+    :table: The table for which the number of rows is to be counted.
+    :returns: The number of rows in the given table.
+    """
     table = db.get_table(table)
     with engine_.begin() as conn:
         stmt = select(table)
@@ -162,6 +164,19 @@ def data_in_table(
         engine_: Engine, data: list[dict] | dict, table: str | Table,
         reverse: bool = False
         ):
+    """Check if the given data is present in the given table.
+
+    .. NOTE:: This function directly performs assertion checks on each
+        entry in the data, it does not return anything.
+
+    :engine_: The sqlalchemy engine that can be used to access the temp db.
+    :data: An entry or a list of entries to be checked for in the table.
+        .. NOTE:: An entry must be a dict with keys matching the table rows.
+    :table: The table in in which the data is to be checked.
+    :reverse: If set to true the function logic will be reversed i.e. it
+        will check that the entries are not in the table.
+    :returns: None.
+    """
     table = db.get_table(table)
     if isinstance(data, dict):
         data = [data]
@@ -176,6 +191,14 @@ def data_in_table(
 
 
 def dataset_in_db(engine_: Engine, dataset: dict):
+    """Check if the given dataset is present in the db.
+
+    This function is a wrapper that calls data_in_table for each table in the dataset.
+
+    :engine_: The sqlalchemy engine that can be used to access the temp db.
+    :dataset: The dataset that is to be checked against the db.
+    :returns: None.
+    """
     used_table_names = dataset.keys()
     for table_name in used_table_names:
         data = dataset[table_name].values()
