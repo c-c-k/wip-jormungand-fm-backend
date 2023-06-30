@@ -6,6 +6,7 @@ from pprint import pprint
 import time
 
 from jormungand.core.config import config
+from jormungand.providers.amadeus import auth
 
 DUMP_ROOT = Path(__file__).parent.resolve().joinpath("data_dumps")
 
@@ -34,5 +35,28 @@ def load_data(fname: str):
     return data
 
 
+def spad_get_auth_data_full():
+    importlib.reload(auth)
+    time.sleep(1)
+    data = auth._get_amadeus_auth_token()
+    data['access_token'] = '[a-zA-Z0-9]{28}'
+    data['application_name'] = 'AppName'
+    data['client_id'] = '[a-zA-Z0-9]{32}'
+    data['username'] = 'user@email.com'
+    dump_data(data, "auth_token", print_after=True)
+
+
+def spad_get_auth_header():
+    importlib.reload(auth)
+    time.sleep(1)
+    # config["amadeus.next_refresh"] = None
+    token = auth.get_auth_header()
+    print("token from get_token: ", token)
+    print("expires: ", time.ctime(config["amadeus.next_refresh"]))
+    print("now:     ", time.ctime(time.time()))
+
+
 def main():
+    # spad_get_auth_data_full()
+    # spad_get_auth_header()
     pass

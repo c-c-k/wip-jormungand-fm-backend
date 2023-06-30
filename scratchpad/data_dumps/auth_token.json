@@ -1,0 +1,11 @@
+{
+    "type": "amadeusOAuth2Token",
+    "username": "user@email.com",
+    "application_name": "AppName",
+    "client_id": "[a-zA-Z0-9]{32}",
+    "token_type": "Bearer",
+    "access_token": "[a-zA-Z0-9]{28}",
+    "expires_in": 1799,
+    "state": "approved",
+    "scope": ""
+}
