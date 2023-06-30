@@ -7,6 +7,7 @@ import time
 
 from jormungand.core.config import config
 from jormungand.providers.amadeus import auth
+from jormungand.providers.amadeus import flight_offers_search
 
 DUMP_ROOT = Path(__file__).parent.resolve().joinpath("data_dumps")
 
@@ -56,7 +57,37 @@ def spad_get_auth_header():
     print("now:     ", time.ctime(time.time()))
 
 
+def spad_flights_offers_search_one_way():
+    importlib.reload(flight_offers_search)
+    depart_date = dt.date.today() + dt.timedelta(days=2)
+    params = {
+            "originLocationCode": "TLV",
+            "destinationLocationCode": "LAS",
+            "departureDate": depart_date.strftime("%Y-%m-%d"),
+            "adults": 1,
+    }
+    data = flight_offers_search.flight_offers_search(params)
+    dump_data(data, "flights_search_one_way")
+
+
+def spad_flights_offers_search_two_way():
+    importlib.reload(flight_offers_search)
+    depart_date = dt.date.today() + dt.timedelta(days=2)
+    return_date = depart_date + dt.timedelta(days=7)
+    params = {
+            "originLocationCode": "TLV",
+            "destinationLocationCode": "LAS",
+            "departureDate": depart_date.strftime("%Y-%m-%d"),
+            "returnDate": return_date.strftime("%Y-%m-%d"),
+            "adults": 1,
+    }
+    data = flight_offers_search.flight_offers_search(params)
+    dump_data(data, "flights_search_two_way")
+
+
 def main():
     # spad_get_auth_data_full()
     # spad_get_auth_header()
+    # spad_flights_offers_search_one_way()
+    # spad_flights_offers_search_two_way()
     pass
