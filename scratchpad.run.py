@@ -2,6 +2,8 @@ import code
 import importlib
 import readline
 
+from scratchpad import amadeus_mod as current
+
 
 def run():
     importlib.reload(current)
