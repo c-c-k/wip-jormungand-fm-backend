@@ -8,6 +8,7 @@ import time
 from jormungand.core.config import config
 from jormungand.providers.amadeus import auth
 from jormungand.providers.amadeus import flight_offers_search
+from jormungand.providers.amadeus import flight_offers_pricing
 
 DUMP_ROOT = Path(__file__).parent.resolve().joinpath("data_dumps")
 
@@ -85,9 +86,25 @@ def spad_flights_offers_search_two_way():
     dump_data(data, "flights_search_two_way")
 
 
+def spad_flight_offers_pricing():
+    importlib.reload(flight_offers_pricing)
+    data_from_offers = load_data("flights_search_one_way")["data"]
+    data_single_flight = data_from_offers[0]
+    formated_data = {
+            "data": {
+                    "type": "flight-offers-pricing",
+                    "flightOffers": [data_single_flight]
+            }
+    }
+    final_pricing_data = (
+            flight_offers_pricing.flight_offers_pricing(formated_data))
+    dump_data(final_pricing_data, "flight_pricing")
+
+
 def main():
     # spad_get_auth_data_full()
     # spad_get_auth_header()
     # spad_flights_offers_search_one_way()
     # spad_flights_offers_search_two_way()
+    # spad_flight_offers_pricing()
     pass

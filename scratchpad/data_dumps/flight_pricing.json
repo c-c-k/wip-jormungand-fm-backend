@@ -1,0 +1,261 @@
+{
+    "data": {
+        "type": "flight-offers-pricing",
+        "flightOffers": [
+            {
+                "type": "flight-offer",
+                "id": "1",
+                "source": "GDS",
+                "instantTicketingRequired": false,
+                "nonHomogeneous": false,
+                "paymentCardRequired": false,
+                "lastTicketingDate": "2023-07-03",
+                "itineraries": [
+                    {
+                        "segments": [
+                            {
+                                "departure": {
+                                    "iataCode": "TLV",
+                                    "terminal": "3",
+                                    "at": "2023-07-03T00:35:00"
+                                },
+                                "arrival": {
+                                    "iataCode": "AMM",
+                                    "at": "2023-07-03T01:25:00"
+                                },
+                                "carrierCode": "RJ",
+                                "number": "341",
+                                "aircraft": {
+                                    "code": "E75"
+                                },
+                                "operating": {
+                                    "carrierCode": "RJ"
+                                },
+                                "duration": "PT50M",
+                                "id": "84",
+                                "numberOfStops": 0,
+                                "co2Emissions": [
+                                    {
+                                        "weight": 28,
+                                        "weightUnit": "KG",
+                                        "cabin": "ECONOMY"
+                                    }
+                                ]
+                            },
+                            {
+                                "departure": {
+                                    "iataCode": "AMM",
+                                    "at": "2023-07-03T02:15:00"
+                                },
+                                "arrival": {
+                                    "iataCode": "ORD",
+                                    "terminal": "5",
+                                    "at": "2023-07-03T06:50:00"
+                                },
+                                "carrierCode": "RJ",
+                                "number": "265",
+                                "aircraft": {
+                                    "code": "787"
+                                },
+                                "operating": {
+                                    "carrierCode": "RJ"
+                                },
+                                "duration": "PT12H35M",
+                                "id": "85",
+                                "numberOfStops": 0,
+                                "co2Emissions": [
+                                    {
+                                        "weight": 430,
+                                        "weightUnit": "KG",
+                                        "cabin": "ECONOMY"
+                                    }
+                                ]
+                            },
+                            {
+                                "departure": {
+                                    "iataCode": "ORD",
+                                    "terminal": "3",
+                                    "at": "2023-07-03T09:55:00"
+                                },
+                                "arrival": {
+                                    "iataCode": "LAS",
+                                    "terminal": "1",
+                                    "at": "2023-07-03T11:52:00"
+                                },
+                                "carrierCode": "RJ",
+                                "number": "7980",
+                                "aircraft": {
+                                    "code": "738"
+                                },
+                                "operating": {
+                                    "carrierCode": "AA"
+                                },
+                                "duration": "PT3H57M",
+                                "id": "86",
+                                "numberOfStops": 0,
+                                "co2Emissions": [
+                                    {
+                                        "weight": 199,
+                                        "weightUnit": "KG",
+                                        "cabin": "ECONOMY"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "price": {
+                    "currency": "EUR",
+                    "total": "759.42",
+                    "base": "510.00",
+                    "fees": [
+                        {
+                            "amount": "0.00",
+                            "type": "SUPPLIER"
+                        },
+                        {
+                            "amount": "0.00",
+                            "type": "TICKETING"
+                        },
+                        {
+                            "amount": "0.00",
+                            "type": "FORM_OF_PAYMENT"
+                        }
+                    ],
+                    "grandTotal": "759.42",
+                    "billingCurrency": "EUR"
+                },
+                "pricingOptions": {
+                    "fareType": [
+                        "PUBLISHED"
+                    ],
+                    "includedCheckedBagsOnly": true
+                },
+                "validatingAirlineCodes": [
+                    "RJ"
+                ],
+                "travelerPricings": [
+                    {
+                        "travelerId": "1",
+                        "fareOption": "STANDARD",
+                        "travelerType": "ADULT",
+                        "price": {
+                            "currency": "EUR",
+                            "total": "759.42",
+                            "base": "510.00",
+                            "taxes": [
+                                {
+                                    "amount": "6.38",
+                                    "code": "XY"
+                                },
+                                {
+                                    "amount": "26.99",
+                                    "code": "IL"
+                                },
+                                {
+                                    "amount": "5.20",
+                                    "code": "YQ"
+                                },
+                                {
+                                    "amount": "3.22",
+                                    "code": "O7"
+                                },
+                                {
+                                    "amount": "5.11",
+                                    "code": "AY"
+                                },
+                                {
+                                    "amount": "166.72",
+                                    "code": "YR"
+                                },
+                                {
+                                    "amount": "3.49",
+                                    "code": "XA"
+                                },
+                                {
+                                    "amount": "5.94",
+                                    "code": "YC"
+                                },
+                                {
+                                    "amount": "19.23",
+                                    "code": "US"
+                                },
+                                {
+                                    "amount": "7.14",
+                                    "code": "KJ"
+                                }
+                            ],
+                            "refundableTaxes": "241.00"
+                        },
+                        "fareDetailsBySegment": [
+                            {
+                                "segmentId": "84",
+                                "cabin": "ECONOMY",
+                                "fareBasis": "SHABIL1",
+                                "brandedFare": "ECPLUS",
+                                "class": "S",
+                                "includedCheckedBags": {
+                                    "quantity": 2
+                                }
+                            },
+                            {
+                                "segmentId": "85",
+                                "cabin": "ECONOMY",
+                                "fareBasis": "SHABIL1",
+                                "brandedFare": "ECPLUS",
+                                "class": "S",
+                                "includedCheckedBags": {
+                                    "quantity": 2
+                                }
+                            },
+                            {
+                                "segmentId": "86",
+                                "cabin": "ECONOMY",
+                                "fareBasis": "SHABIL1",
+                                "brandedFare": "ECPLUS",
+                                "class": "S",
+                                "includedCheckedBags": {
+                                    "quantity": 2
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "bookingRequirements": {
+            "emailAddressRequired": true,
+            "mobilePhoneNumberRequired": true,
+            "travelerRequirements": [
+                {
+                    "travelerId": "1",
+                    "genderRequired": true,
+                    "documentRequired": true,
+                    "dateOfBirthRequired": true,
+                    "redressRequiredIfAny": true,
+                    "residenceRequired": true
+                }
+            ]
+        }
+    },
+    "dictionaries": {
+        "locations": {
+            "ORD": {
+                "cityCode": "CHI",
+                "countryCode": "US"
+            },
+            "AMM": {
+                "cityCode": "AMM",
+                "countryCode": "JO"
+            },
+            "TLV": {
+                "cityCode": "TLV",
+                "countryCode": "IL"
+            },
+            "LAS": {
+                "cityCode": "LAS",
+                "countryCode": "US"
+            }
+        }
+    }
+}
