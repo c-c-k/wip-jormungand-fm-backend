@@ -9,6 +9,7 @@ from jormungand.core.config import config
 from jormungand.providers.amadeus import auth
 from jormungand.providers.amadeus import flight_offers_search
 from jormungand.providers.amadeus import flight_offers_pricing
+from jormungand.providers.amadeus import flight_create_orders
 
 DUMP_ROOT = Path(__file__).parent.resolve().joinpath("data_dumps")
 
@@ -101,10 +102,22 @@ def spad_flight_offers_pricing():
     dump_data(final_pricing_data, "flight_pricing")
 
 
+def spad_flight_create_orders():
+    importlib.reload(flight_create_orders)
+    data_from_offers = load_data("flight_pricing")["data"]
+    data_from_offers = data_from_offers["flightOffers"]
+    data_single_flight = data_from_offers[0]
+    formated_data = load_data("flight_booking_request_example")
+    formated_data["data"]["flightOffers"] = [data_single_flight]
+    booking_data = (flight_create_orders.flight_create_orders(formated_data))
+    dump_data(booking_data, "flight_booking_confirm")
+
+
 def main():
     # spad_get_auth_data_full()
     # spad_get_auth_header()
     # spad_flights_offers_search_one_way()
     # spad_flights_offers_search_two_way()
     # spad_flight_offers_pricing()
+    # spad_flight_create_orders()
     pass
