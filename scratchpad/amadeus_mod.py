@@ -68,7 +68,7 @@ def spad_flights_offers_search_one_way():
             "departureDate": depart_date.strftime("%Y-%m-%d"),
             "adults": 1,
     }
-    data = flight_offers_search.flight_offers_search(params)
+    data = flight_offers_search._amadeus_flight_offers_search(params)
     dump_data(data, "flights_search_one_way")
 
 
@@ -83,7 +83,7 @@ def spad_flights_offers_search_two_way():
             "returnDate": return_date.strftime("%Y-%m-%d"),
             "adults": 1,
     }
-    data = flight_offers_search.flight_offers_search(params)
+    data = flight_offers_search._amadeus_flight_offers_search(params)
     dump_data(data, "flights_search_two_way")
 
 
